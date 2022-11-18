@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
-public class Client 
+public class Client
 {
     private static readonly int dataBufferSize = 4096;
 
-    private int id;
+    private readonly int id;
     public Player player;
     public TCP tcp;
     public UDP udp;
@@ -29,26 +29,19 @@ public class Client
         // Send all players to the new player
         foreach (var _client in Server.clients.Values)
             if (_client.player != null)
-            {
                 if (_client.id != id)
-                {
                     ServerSend.SpawnPlayer(id, _client.player);
-                    
-                }
-            }
-        
+
         // Send the new player to all players (including themselves.)
         foreach (var _client in Server.clients.Values)
             if (_client.player != null)
-            {
                 ServerSend.SpawnPlayer(_client.id, player);
-            }
 
-        Server.players.Add(id,player);
+        Server.players.Add(id, player);
     }
 
     /// <summary>
-    /// If the client is no longer sending data and thus disconnected. 
+    ///     If the client is no longer sending data and thus disconnected.
     /// </summary>
     private void Disconnect()
     {
@@ -66,9 +59,7 @@ public class Client
         ServerSend.PlayerDisconnected(id);
 
         foreach (var currentPlayer in Server.players.Values)
-        {
             Debug.Log($"Id:{currentPlayer.id} Username:{currentPlayer.username} RemovedID:{id}");
-        }
     }
 
 

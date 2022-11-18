@@ -83,31 +83,15 @@ public class ServerSend
 
     /// <summary>Sends a player's updated position to all clients.</summary>
     /// <param name="_player">The player whose position to update.</param>
-    public static void PlayerPosition(Player _player)
+    public static void UpdatePlayerTransform(int _toClient, Player _player)
     {
-        if (_player.transform.position.y <= -20) _player.transform.position.Set(0, 5, 0);
-        using (var _packet = new Packet((int)ServerPackets.PlayerPosition))
+        using (var _packet = new Packet((int)ServerPackets.PlayerUpdate))
         {
             _packet.Write(_player.id);
             _packet.Write(_player.transform.position);
-
-            SendUDPDataToAll(_packet);
-        }
-    }
-
-    /// <summary>
-    ///     Sends a player's updated rotation to all clients except to himself (to avoid overwriting the local player's
-    ///     rotation).
-    /// </summary>
-    /// <param name="_player">The player whose rotation to update.</param>
-    public static void PlayerRotation(Player _player)
-    {
-        using (var _packet = new Packet((int)ServerPackets.PlayerRotation))
-        {
-            _packet.Write(_player.id);
             _packet.Write(_player.transform.rotation);
 
-            SendUDPDataToAll(_player.id, _packet);
+            SendUDPDataToAll(_toClient, _packet);
         }
     }
 

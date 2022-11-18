@@ -40,6 +40,6 @@ public class NetworkManager : MonoBehaviour
     public Player InstantiatePlayer(string username)
     {
         playerPrefab.gameObject.name = $"Player {username}";
-        return Instantiate(playerPrefab, new Vector3(0f, 0.5f, 0f), Quaternion.identity,null).GetComponent<Player>();
+        return Instantiate(playerPrefab, new Vector3(0f, 0.5f, 0f), Quaternion.identity, null).GetComponent<Player>();
     }
 }

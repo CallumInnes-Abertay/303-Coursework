@@ -73,8 +73,7 @@ public class Client : MonoBehaviour
         {
             { (int)ServerPackets.Welcome, ClientHandle.Welcome },
             { (int)ServerPackets.SpawnPlayer, ClientHandle.SpawnPlayer },
-            { (int)ServerPackets.PlayerPosition, ClientHandle.PlayerPosition },
-            { (int)ServerPackets.PlayerRotation, ClientHandle.PlayerRotation },
+            { (int)ServerPackets.UpdatePlayerTransform, ClientHandle.UpdatePlayerTransform },
             { (int)ServerPackets.PlayerColour, ClientHandle.PlayerColour },
             { (int)ServerPackets.PlayerDisconnected, ClientHandle.PlayerDisconnected },
             { (int)ServerPackets.SpawnCollectable, ClientHandle.SpawnCollectable },
@@ -142,7 +141,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        ///     Async call back for connecting to server
+        /// Async call back for connecting to server
         /// </summary>
         /// <param name="_result">The result of the async operation</param>
         private void ConnectCallback(IAsyncResult _result)

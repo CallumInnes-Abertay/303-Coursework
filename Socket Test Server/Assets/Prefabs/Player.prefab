@@ -47,12 +47,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 3593507203594507841}
+  gravity: -12.25
+  id: 0
   jumpSpeed: 7
   moveSpeed: 7
-  gravity: -12.25
-  username: 
-  id: 0
   score: 0
+  username: 
 --- !u!143 &3593507203594507841
 CharacterController:
   m_ObjectHideFlags: 0

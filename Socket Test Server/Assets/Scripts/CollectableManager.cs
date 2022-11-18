@@ -22,7 +22,7 @@ public class CollectableManager : MonoBehaviour
     }
 
 
-    public void SpawnCollectable(bool newPos  = true)
+    public void SpawnCollectable(bool newPos = true)
     {
         /*
         If a new collectable is needed to be spawned choose from a random position 
@@ -43,6 +43,5 @@ public class CollectableManager : MonoBehaviour
         {
             ServerSend.SpawnCollectable(previousPosition.position);
         }
-        
     }
 }

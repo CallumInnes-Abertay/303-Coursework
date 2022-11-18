@@ -8,8 +8,7 @@ public enum ServerPackets
 {
     Welcome = 1,
     SpawnPlayer,
-    PlayerPosition,
-    PlayerRotation,
+    PlayerUpdate,
     PlayerColour,
     PlayerDisconnected,
     SpawnCollectable,
@@ -35,7 +34,7 @@ public class Packet : IDisposable
     /// <summary>Creates a new empty packet (without an ID).</summary>
     public Packet()
     {
-        buffer = new List<byte>(); // Initialize buffer
+        buffer = new List<byte>(); // Initialise buffer
         readPos = 0; // Set readPos to 0
     }
 
