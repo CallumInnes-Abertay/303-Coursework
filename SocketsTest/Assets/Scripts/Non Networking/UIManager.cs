@@ -116,10 +116,29 @@ public class UIManager : MonoBehaviour
         errorText.text = "Connecting";
     }
 
-    public void HideMenu()
+    public void HideMenu(bool isHidden = true)
     {
-        errorText.gameObject.SetActive(false);
-        startMenuPanel.SetActive(false);
-        hudPanel.SetActive(true);
+        if (isHidden)
+        {
+            errorText.gameObject.SetActive(false);
+            startMenuPanel.SetActive(false);
+            hudPanel.SetActive(true);
+        }
+        else
+        {
+            errorText.gameObject.SetActive(true);
+            startMenuPanel.SetActive(true);
+            hudPanel.SetActive(false);
+
+            connectButton.interactable = true;
+            usernameField.interactable = true;
+            AddressField.interactable = true;
+            connectButton.gameObject.SetActive(true);
+            usernameField.gameObject.SetActive(true);
+            AddressField.gameObject.SetActive(true);
+        }
+        
     }
+
+
 }
