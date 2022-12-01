@@ -2,12 +2,21 @@ using UnityEngine;
 
 public class ServerSend
 {
-    private static void SendTCPData(int toClient, Packet packet)
+    /// <summary>
+    /// Sends TCP Data to one client.
+    /// </summary>
+    /// <param name="_toClient">The client to send to.</param>
+    /// <param name="_packet">The data to send.</param>
+    private static void SendTCPData(int _toClient, Packet _packet)
     {
-        packet.WriteLength();
-        Server.clients[toClient].tcp.SendData(packet);
+        _packet.WriteLength();
+        Server.clients[_toClient].tcp.SendData(_packet);
     }
 
+    /// <summary>
+    /// Sends TCP data to all clients.
+    /// </summary>
+    /// <param name="packet">The data to send.</param>
     private static void SendTCPDataToAll(Packet packet)
     {
         packet.WriteLength();
@@ -15,29 +24,43 @@ public class ServerSend
             Server.clients[i].tcp.SendData(packet);
     }
 
-    private static void SendTCPDataToAll(int exceptClient, Packet packet)
+    /// <summary>
+    /// Sends TCP data to all except one client.
+    /// </summary>
+    /// <param name="_exceptClient">The client to ignore.</param>
+    /// <param name="_packet">The data to send.</param>
+    private static void SendTCPDataToAll(int _exceptClient, Packet _packet)
     {
-        packet.WriteLength();
+        _packet.WriteLength();
         for (var i = 1; i <= Server.MaxPlayers; i++)
-            if (i != exceptClient)
-                Server.clients[i].tcp.SendData(packet);
+            if (i != _exceptClient)
+                Server.clients[i].tcp.SendData(_packet);
     }
 
-    private static void SendUDPData(int toClient, Packet packet)
+    /// <summary>
+    /// Sends UDP data to one client.
+    /// </summary>
+    /// <param name="_toClient">The client to send to.</param>
+    /// <param name="_packet"></param>
+    private static void SendUDPData(int _toClient, Packet _packet)
     {
-        packet.WriteLength();
-        Server.clients[toClient].udp.SendData(packet);
+        _packet.WriteLength();
+        Server.clients[_toClient].udp.SendData(_packet);
     }
 
-    private static void SendUDPDataToAll(Packet packet)
+    /// <summary>
+    /// Sends UDP data to all clients.
+    /// </summary>
+    /// <param name="_packet">The data to send.</param>
+    private static void SendUDPDataToAll(Packet _packet)
     {
-        packet.WriteLength();
+        _packet.WriteLength();
         for (var i = 1; i <= Server.MaxPlayers; i++)
-            Server.clients[i].udp.SendData(packet);
+            Server.clients[i].udp.SendData(_packet);
     }
 
-    /// <summary>Sends a packet to all clients except one via UDP.</summary>
-    /// <param name="_exceptClient">The client to NOT send the data to.</param>
+    /// <summary>Sends UDP data to all except one client.</summary>
+    /// <param name="_exceptClient">The client to ignore.</param>
     /// <param name="_packet">The packet to send.</param>
     private static void SendUDPDataToAll(int _exceptClient, Packet _packet)
     {
@@ -64,6 +87,21 @@ public class ServerSend
     }
 
     /// <summary>
+    /// Sends a welcome message to joining client via TCP.
+    /// </summary>
+    /// <param name="_toClient">The client to welcome</param>
+    public static void StartTimer(int _toClient, int _currentTick)
+    {
+        using (var packet = new Packet((int)ServerPackets.StartTimer))
+        {
+            packet.Write(_currentTick);
+
+            SendTCPData(_toClient, packet);
+        }
+    }
+
+
+    /// <summary>
     ///     Spawns the client with all relevant information such as id, username, position, rotation and colour.
     /// </summary>
     /// <param name="_toClient">Client to spawn </param>
@@ -88,6 +126,7 @@ public class ServerSend
         using (var _packet = new Packet((int)ServerPackets.PlayerUpdate))
         {
             _packet.Write(_player.id);
+            _packet.Write(NetworkManager.instance.Time);
             _packet.Write(_player.transform.position);
             _packet.Write(_player.transform.rotation);
 
@@ -123,7 +162,7 @@ public class ServerSend
     }
 
     /// <summary>
-    ///     Spawns a collectable on all clients
+    /// Spawns a collectable on all clients
     /// </summary>
     /// <param name="_collectablePos">The position to spawn the collectable. </param>
     public static void SpawnCollectable(Vector3 _collectablePos)
@@ -131,6 +170,20 @@ public class ServerSend
         using (var _packet = new Packet((int)ServerPackets.SpawnCollectable))
         {
             _packet.Write(_collectablePos);
+            SendTCPDataToAll(_packet);
+        }
+    }
+
+    /// <summary>
+    /// Tells all clients that a player has collected a collectable.
+    /// </summary>
+    /// <param name="_player">Player who collected the collectable.</param>
+    public static void ScoreUpdate(Player _player)
+    {
+        using (var _packet = new Packet((int)ServerPackets.ScoreUpdate))
+        {
+            _packet.Write(_player.id);
+            _packet.Write(_player.score);
             SendTCPDataToAll(_packet);
         }
     }

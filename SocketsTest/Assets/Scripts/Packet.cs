@@ -7,11 +7,13 @@ using UnityEngine;
 public enum ServerPackets
 {
     Welcome = 1,
+    StartTimer,
     SpawnPlayer,
-    UpdatePlayerTransform,
+    PlayerUpdate,
     PlayerColour,
     PlayerDisconnected,
     SpawnCollectable,
+    ScoreUpdate,
     StopServer
 }
 
@@ -22,6 +24,7 @@ public enum ClientPackets
     PlayerMovement,
     CollectableCollision
 }
+
 
 public class Packet : IDisposable
 {

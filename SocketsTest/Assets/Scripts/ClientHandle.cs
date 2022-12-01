@@ -1,6 +1,9 @@
+using System;
+using System.Linq;
 using System.Net;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ClientHandle : MonoBehaviour
 {
@@ -10,17 +13,27 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet"></param>
     public static void Welcome(Packet _packet)
     {
-        var _msg = _packet.ReadString();
-        var _myId = _packet.ReadInt();
+        var msg = _packet.ReadString();
+        var myId = _packet.ReadInt();
 
-        Debug.Log($"Message from server: {_msg}");
-        Client.instance.myId = _myId;
+        Debug.Log($"Message from server: {msg}");
+        Client.instance.myId = myId;
         ClientSend.WelcomeReceived();
 
         // Now that we have the client's id, we can by connect UDP
         Client.instance.udp.Connect(((IPEndPoint)Client.instance.tcp.socket.Client.LocalEndPoint).Port);
     }
 
+    //Starts the client side timer synced up with the server (adjusted for ping).
+    public static void StartTimer(Packet _packet)
+    {
+        var time = _packet.ReadInt();
+
+        GameManager.instance.StartTimer(time);
+    }
+
+
+    
     /// <summary>
     ///     Spawns the player into the game.
     /// </summary>
@@ -33,8 +46,8 @@ public class ClientHandle : MonoBehaviour
         var rotation = _packet.ReadQuaternion();
         var colour = _packet.ReadVector3();
 
+        //Spawns the player the same as the server.
         GameManager.instance.SpawnPlayer(id, username, position, rotation, colour);
-
     }
 
     /// <summary>
@@ -44,11 +57,36 @@ public class ClientHandle : MonoBehaviour
     public static void UpdatePlayerTransform(Packet _packet)
     {
         var id = _packet.ReadInt();
+        var time = _packet.ReadInt();
         var position = _packet.ReadVector3();
         var rotation = _packet.ReadQuaternion();
 
-        GameManager.players[id].transform.SetPositionAndRotation(position, rotation);
+        PlayerManager currentPlayer;
 
+        //Caches the player we're dealing with for performance.
+        try
+        {
+            currentPlayer = GameManager.players[id];
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            return;
+        }
+        //Sets player position and transform
+        currentPlayer.transform.SetPositionAndRotation(position, rotation);
+
+        //Sets the values to
+        if (GameManager.players.TryGetValue(id, out PlayerManager _player))
+        {
+            _player.transform.position = position;
+            _player.transform.rotation = rotation;
+
+        }
+
+        currentPlayer.Positions.Add(new PreviousPositions(time, position));
+
+        if (currentPlayer.Positions.Count >= 2) currentPlayer.Positions.RemoveAt(0);
     }
 
     /// <summary>
@@ -57,12 +95,12 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet">Colour to read</param>
     public static void PlayerColour(Packet _packet)
     {
-        var _id = _packet.ReadInt();
+        var id = _packet.ReadInt();
         var colour = _packet.ReadVector3();
 
         //For all players in the lobby if the player is the same as the colour, set that players model to that colour.
         foreach (var player in GameManager.players)
-            if (player.Key.Equals(_id))
+            if (player.Key.Equals(id))
             {
                 Color colorHsv = new(colour.x, colour.y, colour.z, 1);
                 var renderer = player.Value.GetComponentInChildren(typeof(MeshRenderer)) as MeshRenderer;
@@ -76,10 +114,10 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet">Id of player to disconnect.</param>
     public static void PlayerDisconnected(Packet _packet)
     {
-        var _id = _packet.ReadInt();
+        var id = _packet.ReadInt();
 
-        Destroy(GameManager.players[_id].gameObject);
-        GameManager.players.Remove(_id);
+        Destroy(GameManager.players[id].gameObject);
+        GameManager.players.Remove(id);
     }
 
     /// <summary>
@@ -88,13 +126,36 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet">Position to spawn collectable</param>
     public static void SpawnCollectable(Packet _packet)
     {
-        var _position = _packet.ReadVector3();
+        var position = _packet.ReadVector3();
 
         //Deletes all previous collectables (as this function will be ran after this or another player has already,
         //collected it their side.
         var previousCollectables = GameObject.FindGameObjectsWithTag("Collectable");
         foreach (var collectable in previousCollectables) Destroy(collectable);
-        GameManager.instance.SpawnCollectable(_position);
+        GameManager.instance.SpawnCollectable(position);
+    }
+
+    /// <summary>
+    ///     If server has requested for clients to spawn a coin somewhere.
+    /// </summary>
+    /// <param name="_packet">Position to spawn collectable</param>
+    public static void UpdateScore(Packet _packet)
+    {
+        var id = _packet.ReadInt();
+        var score = _packet.ReadInt();
+
+        //Loops through all players and updates their score.
+        foreach (var player in GameManager.players.Values.Where(player => player.Id.Equals(id)))
+        {
+            player.Score = score;
+            if(player.gameObject.CompareTag("Player"))
+            {
+                return;
+            }
+
+            player.gameObject.GetComponentInChildren<HoverText>().scoreText.text = player.Score.ToString();
+        }
+
     }
 
     /// <summary>
@@ -103,12 +164,14 @@ public class ClientHandle : MonoBehaviour
     /// <param name="_packet">Message to read out to clients before closing.</param>
     public static void StopServer(Packet _packet)
     {
-        var text = _packet.ReadString();
+        var msg = _packet.ReadString();
 
-        Debug.Log(text);
+        Debug.Log(msg);
 #if UNITY_EDITOR
-        EditorApplication.isPlaying = false;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        //EditorApplication.isPlaying = false;
 #endif
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Application.Quit();
     }
 }

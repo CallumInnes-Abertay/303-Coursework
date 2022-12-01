@@ -51,14 +51,8 @@ public class Player : MonoBehaviour
         id = _id;
         username = _username;
         score = 0;
-
     }
 
-    ///
-    public void FixedUpdate()
-    {
-
-    }
 
     /// <summary>Calculates the player's desired direction and moves them.</summary>
     /// <param name="_inputDirection"></param>
@@ -69,12 +63,8 @@ public class Player : MonoBehaviour
         moveDirection *= moveSpeed;
 
         //Jump and gravity
-        if (controller.isGrounded)
-        {
-            yVelocity = 0f;
-           // if (inputs[4]) yVelocity += jumpSpeed;
-        }
-
+        if (controller.isGrounded) yVelocity = 0f;
+        // if (inputs[4]) yVelocity += jumpSpeed;
 
         yVelocity += gravity;
 
@@ -91,14 +81,9 @@ public class Player : MonoBehaviour
     /// <param name="_rotation">The new rotation.</param>
     public void SetPlayerTransform(Vector3 _position, Quaternion _rotation)
     {
-        if (transform == null)
-        {
-            return;
-        }
-
+        if (transform == null) return;
         transform.position = _position;
         transform.rotation = _rotation;
-
     }
 
     /// <summary>

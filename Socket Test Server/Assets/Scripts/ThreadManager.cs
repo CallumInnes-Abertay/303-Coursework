@@ -45,6 +45,7 @@ public class ThreadManager : MonoBehaviour
             actionToExecuteOnMainThread = false;
         }
 
+        //Loops through every function passed in and runs them.
         foreach (var action in executeCopiedOnMainThread)
             action();
     }

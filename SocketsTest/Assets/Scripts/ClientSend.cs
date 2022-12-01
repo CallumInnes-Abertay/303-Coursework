@@ -33,7 +33,7 @@ public class ClientSend : MonoBehaviour
     }
 
     /// <summary>Sends player input to the server via UDP.</summary>
-    /// <param name="position">The keys the player has pressed</param>
+    /// <param name="_player">The position of this player.</param>
     public static void PlayerMovement(PlayerController _player)
     {
         using (var _packet = new Packet((int)ClientPackets.PlayerMovement))
@@ -55,7 +55,6 @@ public class ClientSend : MonoBehaviour
         {
             _packet.Write(Client.instance.myId);
             _packet.Write(UIManager.instance.usernameField.text);
-            _packet.Write(1);
 
 
             SendTCPData(_packet);
