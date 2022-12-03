@@ -6,7 +6,7 @@ public class CollectableManager : MonoBehaviour
     public static CollectableManager instance;
 
     [SerializeField] private List<GameObject> collectables = new();
-    private Transform previousPosition;
+    private Vector3 previousPosition;
 
     private void Awake()
     {
@@ -19,10 +19,10 @@ public class CollectableManager : MonoBehaviour
             Debug.Log("Instance already exists, destroying object!");
             Destroy(this);
         }
+        previousPosition = Vector3.zero;
     }
 
-
-    public void SpawnCollectable(bool newPos  = true)
+    public void SpawnCollectable(bool newPos = true)
     {
         /*
         If a new collectable is needed to be spawned choose from a random position 
@@ -33,16 +33,19 @@ public class CollectableManager : MonoBehaviour
         {
             var randomPosition = collectables[Random.Range(0, collectables.Count)];
 
+            if (randomPosition.transform.position == previousPosition)
+            {
+                 randomPosition = collectables[Random.Range(0, collectables.Count)];
+            }
 
-            previousPosition = randomPosition.transform;
+            previousPosition = randomPosition.transform.position;
 
             ServerSend.SpawnCollectable(randomPosition.transform.position);
         }
         //In the case a new one isn't meant to be spawned then send the previous position.
         else
         {
-            ServerSend.SpawnCollectable(previousPosition.position);
+            ServerSend.SpawnCollectable(previousPosition);
         }
-        
     }
 }

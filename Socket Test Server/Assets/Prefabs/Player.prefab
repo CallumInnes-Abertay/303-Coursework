@@ -46,13 +46,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b15bce543caf0046a4bb3e957039bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controller: {fileID: 3593507203594507841}
-  jumpSpeed: 7
-  moveSpeed: 7
-  gravity: -12.25
-  username: 
+  gravity: -19.62
   id: 0
+  jumpSpeed: 10
+  moveSpeed: 7
   score: 0
+  username: 
 --- !u!143 &3593507203594507841
 CharacterController:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,8 +9,10 @@ public class GameManager : MonoBehaviour
     public static Dictionary<int, PlayerManager> players = new();
     [SerializeField] private GameObject collectablePrefab;
     [SerializeField] private GameObject externalPlayerPrefab;
-
     [SerializeField] private GameObject localPlayerPrefab;
+
+    [field: NonSerialized] public int Time { get; private set; }
+    private bool isTimerRunning;
 
     private void Awake()
     {
@@ -24,9 +27,26 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        //So the timer doesnt stop if you alt tab and desync the player and client.
+        Application.runInBackground = true;
+    }
+
+    //Runs the timer
+    private void FixedUpdate()
+    {
+        if (!isTimerRunning) 
+            return;
+
+
+        Time++;
+        UIManager.instance.timerText.text = Time.ToString();
+    }
+
     /// <summary>Spawns a player.</summary>
     /// <param name="_id">The player's ID.</param>
-    /// <param name="_username"></param>
+    /// <param name="_username">The player's username.</param>
     /// <param name="_position">The player's starting position.</param>
     /// <param name="_rotation">The player's starting rotation.</param>
     /// <param name="_colour">The colour of the player.</param>
@@ -34,12 +54,12 @@ public class GameManager : MonoBehaviour
     {
         GameObject _player;
 
-        //If the id is the same as the current user id, then spawn the player the user will be playing as.
+        //If the id is the same as the current user id, then spawn the local player the user will be playing as.
         if (_id == Client.instance.myId)
         {
             _player = Instantiate(localPlayerPrefab, _position, _rotation);
         }
-        //If not then it's a seperate player, so spawn the external prefab the connecting player will play as.
+        //If not then it's a joining  player, so spawn the external prefab the connecting player will play as.
         else
         {
             _player = Instantiate(externalPlayerPrefab, _position, _rotation);
@@ -57,18 +77,37 @@ public class GameManager : MonoBehaviour
         playerManager.Username = _username;
         playerManager.Score = 0;
 
-
         //Adds the player (regardless if they're local or external_ to a dictionary of all players
         //for affecting all players
         players.Add(_id, playerManager);
     }
 
     /// <summary>
-    ///     Spawns collectable
+    /// Spawns collectable
     /// </summary>
-    /// <param name="collectablePos">Position to spawn collectable.</param>
-    public void SpawnCollectable(Vector3 collectablePos)
+    /// <param name="_collectablePos">Position to spawn collectable.</param>
+    public void SpawnCollectable(Vector3 _collectablePos)
     {
-        Instantiate(collectablePrefab, collectablePos, Quaternion.identity);
+        Instantiate(collectablePrefab, _collectablePos, Quaternion.identity);
+    }
+
+    /// <summary>
+    /// Starts the timer client side by turning on FixedUpdate.
+    /// </summary>
+    /// <param name="_serverTime">The time the server has passed in (adjusted for ping time).</param>
+    public void StartTimer(int _serverTime)
+    {
+        Time = _serverTime;
+        isTimerRunning = true;
+    }
+
+
+    /// <summary>
+    /// Stops the timer client side by turning off FixedUpdate.
+    /// </summary>
+    public void StopTimer()
+    {
+        Time = 0;
+        isTimerRunning = false;
     }
 }

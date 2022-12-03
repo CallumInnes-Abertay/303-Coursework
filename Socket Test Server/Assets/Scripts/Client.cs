@@ -1,20 +1,24 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
-public class Client 
+public class Client
 {
-    private static readonly int dataBufferSize = 4096;
+    //The max size of a buffer/packet.
+    private const int DataBufferSize = 4096;
 
-    private int id;
+    private readonly int id;
     public Player player;
     public TCP tcp;
     public UDP udp;
 
     public Client(int _clientId)
     {
+        //Give them a id to tie them to their clientside counterpart
         id = _clientId;
+        //TCP and UDP for sending and listening.
         tcp = new TCP(id);
         udp = new UDP(id);
     }
@@ -23,37 +27,33 @@ public class Client
     /// <param name="_playerName">The username of the new player.</param>
     public void SendIntoGame(string _playerName)
     {
+        //Spawns the player server side.
         player = NetworkManager.instance.InstantiatePlayer(_playerName);
         player.Initialise(id, _playerName);
 
-        // Send all players to the new player
-        foreach (var _client in Server.clients.Values)
-            if (_client.player != null)
-            {
-                if (_client.id != id)
-                {
-                    ServerSend.SpawnPlayer(id, _client.player);
-                    
-                }
-            }
-        
-        // Send the new player to all players (including themselves.)
-        foreach (var _client in Server.clients.Values)
-            if (_client.player != null)
-            {
-                ServerSend.SpawnPlayer(_client.id, player);
-            }
+        // Send all previous players to the new player
+        foreach (var client in Server.clients.Values)
+            if (client.player != null)
+                if (client.id != id)
+                    ServerSend.SpawnPlayer(id, client.player);
 
-        Server.players.Add(id,player);
+        // Send the new player to all players (including themselves.)
+        foreach (var client in Server.clients.Values)
+            if (client.player != null)
+                ServerSend.SpawnPlayer(client.id, player);
+
+        Server.players.Add(id, player);
     }
 
     /// <summary>
-    /// If the client is no longer sending data and thus disconnected. 
+    /// If the client is no longer sending data and thus disconnected.
     /// </summary>
     private void Disconnect()
     {
         Debug.Log($"{player.username}: {tcp.socket.Client.RemoteEndPoint} has disconnected");
 
+        //Destroys the player serverside and removes them from all collections.
+        Server.players.Remove(id);
         ThreadManager.ExecuteOnMainThread(() =>
         {
             player.DestroyPlayer();
@@ -62,16 +62,24 @@ public class Client
 
         tcp.Disconnect();
         udp.Disconnect();
-        Server.players.Remove(id);
+
+        //Tells all clients that another client has disconnected and to destroy them client side.
         ServerSend.PlayerDisconnected(id);
 
         foreach (var currentPlayer in Server.players.Values)
-        {
             Debug.Log($"Id:{currentPlayer.id} Username:{currentPlayer.username} RemovedID:{id}");
+        //If server empty then reset the timer.
+        if (!Server.players.Any())
+        {
+            Debug.Log("No players in server, timer resetting.");
+            NetworkManager.instance.StopTimer();
         }
     }
 
 
+    /// <summary>
+    /// Handling TCP server side.
+    /// </summary>
     public class TCP
     {
         private readonly int id;
@@ -85,20 +93,26 @@ public class Client
             id = _id;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="_socket"></param>
         public void Connect(TcpClient _socket)
         {
             socket = _socket;
-            socket.ReceiveBufferSize = dataBufferSize;
-            socket.SendBufferSize = dataBufferSize;
+
+            //Set up buffer size of the socket
+            socket.ReceiveBufferSize = DataBufferSize;
+            socket.SendBufferSize = DataBufferSize;
 
             stream = socket.GetStream();
 
             receivedData = new Packet();
-            receiveBuffer = new byte[dataBufferSize];
+            receiveBuffer = new byte[DataBufferSize];
 
-            stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+            //Starts reading for any messages from the client.
+            stream.BeginRead(receiveBuffer, 0, DataBufferSize, ReceiveCallback, null);
 
-            //Sends a welcome message to each player just for visual feedback they've actually connected.
+            //Sends a welcome message to each player to confirm they've connected.
             ServerSend.Welcome(id, "Welcome to the server!");
         }
 
@@ -108,28 +122,39 @@ public class Client
             {
                 if (socket != null) stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
             }
-            catch (Exception _ex)
+            catch (Exception ex)
             {
-                Debug.Log($"Error sending data to player {id} via TCP: {_ex}");
+                Debug.Log($"Error sending data to player {id} via TCP: {ex}");
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_result"></param>
         private void ReceiveCallback(IAsyncResult _result)
         {
             try
             {
-                var _byteLength = stream.EndRead(_result);
-                if (_byteLength <= 0)
+                //Ends the network stream read and returns the number of bytes read.
+                var byteLength = stream.EndRead(_result);
+
+                //If there was no bytes, then the client is no longer sending data and must have disconnected.
+                if (byteLength <= 0)
                 {
                     Server.clients[id].Disconnect();
                     return;
                 }
 
-                var _data = new byte[_byteLength];
-                Array.Copy(receiveBuffer, _data, _byteLength);
+                var data = new byte[byteLength];
+                //Copy the data into a byte array 
+                Array.Copy(receiveBuffer, data, byteLength);
 
-                receivedData.Reset(HandleData(_data));
-                stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+                //So it can be read (and if the packet can be reused then reset the packet by clearing the buffer)
+                receivedData.Reset(HandleData(data));
+
+                //Recursion to continue reading till out of data.
+                stream.BeginRead(receiveBuffer, 0, DataBufferSize, ReceiveCallback, null);
             }
             catch (Exception _ex)
             {
@@ -138,41 +163,53 @@ public class Client
             }
         }
 
+        /// <summary>
+        /// Handles all incoming data. 
+        /// </summary>
+        /// <param name="_data">The data to handle in the form of a byte array.</param>
+        /// <returns></returns>
         private bool HandleData(byte[] _data)
         {
-            var _packetLength = 0;
+            var packetLength = 0;
 
+            //prepares the byte array to be read.
             receivedData.SetBytes(_data);
 
+            //If whats left is greater than an int (length)
             if (receivedData.UnreadLength() >= 4)
             {
-                _packetLength = receivedData.ReadInt();
-                if (_packetLength <= 0)
+                //Get the length.
+                packetLength = receivedData.ReadInt();
+                //If the length is 0 or less then packet empty and return early.
+                if (packetLength <= 0)
                     return true;
             }
 
-            while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength())
+            //However, while theres still data to read.
+            while (packetLength > 0 && packetLength <= receivedData.UnreadLength())
             {
-                var _packetBytes = receivedData.ReadBytes(_packetLength);
+                var packetBytes = receivedData.ReadBytes(packetLength);
+
+                //Run the correct function to handle the data on the main thread (so to allow Unity specific functions).
                 ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    using (var _packet = new Packet(_packetBytes))
+                    using (var packet = new Packet(packetBytes))
                     {
-                        var _packetId = _packet.ReadInt();
-                        Server.packetHandlers[_packetId](id, _packet);
+                        var packetId = packet.ReadInt();
+                        Server.packetHandlers[packetId](id, packet);
                     }
                 });
 
-                _packetLength = 0;
+                packetLength = 0;
                 if (receivedData.UnreadLength() >= 4)
                 {
-                    _packetLength = receivedData.ReadInt();
-                    if (_packetLength <= 0)
+                    packetLength = receivedData.ReadInt();
+                    if (packetLength <= 0)
                         return true;
                 }
             }
 
-            if (_packetLength <= 1)
+            if (packetLength <= 1)
                 return true;
 
             return false;
@@ -188,6 +225,9 @@ public class Client
         }
     }
 
+    /// <summary>
+    /// Handling UDP server side.
+    /// </summary>
     public class UDP
     {
         private readonly int id;
@@ -208,17 +248,21 @@ public class Client
             Server.SendUDPData(endPoint, _packet);
         }
 
+        /// <summary>
+        /// Handles all incoming data from client and runs the handle method.
+        /// </summary>
+        /// <param name="_packetData">Data to handle.</param>
         public void HandleData(Packet _packetData)
         {
-            var _packetLength = _packetData.ReadInt();
-            var _packetBytes = _packetData.ReadBytes(_packetLength);
+            var packetLength = _packetData.ReadInt();
+            var packetBytes = _packetData.ReadBytes(packetLength);
 
             ThreadManager.ExecuteOnMainThread(() =>
             {
-                using (var _packet = new Packet(_packetBytes))
+                using (var packet = new Packet(packetBytes))
                 {
-                    var _packetId = _packet.ReadInt();
-                    Server.packetHandlers[_packetId](id, _packet);
+                    var packetId = packet.ReadInt();
+                    Server.packetHandlers[packetId](id, packet);
                 }
             });
         }

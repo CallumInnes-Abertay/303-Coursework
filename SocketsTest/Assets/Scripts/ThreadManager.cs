@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class ThreadManager : MonoBehaviour
 {
+    //List of functions to run.
     private static readonly List<Action> executeOnMainThread = new();
     private static readonly List<Action> executeCopiedOnMainThread = new();
+
     private static bool actionToExecuteOnMainThread;
 
     private void Update()
@@ -46,7 +48,8 @@ public class ThreadManager : MonoBehaviour
             actionToExecuteOnMainThread = false;
         }
 
-        for (var i = 0; i < executeCopiedOnMainThread.Count; i++)
-            executeCopiedOnMainThread[i]();
+        //Runs all handle functions now on the main thread.
+        foreach (var functionToRun in executeCopiedOnMainThread)
+            functionToRun();
     }
 }

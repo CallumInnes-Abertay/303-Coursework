@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3665299290799684810}
   - component: {fileID: 9056879161524416986}
   - component: {fileID: 8449941147299482180}
-  - component: {fileID: 3987589020891544831}
   m_Layer: 0
   m_Name: LocalPlayer
   m_TagString: Player
@@ -48,6 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dba54814055a6b48b2eee7f6b363591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 10
+  jumpHeight: 7
 --- !u!114 &8449941147299482180
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,22 +61,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77b49bb2c6003f04b8ad7055fa0af8a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!54 &3987589020891544831
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2742508387778874876}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 1
-  m_Constraints: 0
-  m_CollisionDetection: 1
 --- !u!1 &3059629825948246846
 GameObject:
   m_ObjectHideFlags: 0
@@ -91,7 +76,7 @@ GameObject:
   - component: {fileID: 2811403528984282701}
   m_Layer: 0
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -207,9 +192,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e79bc428788e74aac4318290705348, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clampAngle: 85
   player: {fileID: 8449941147299482180}
   sensitivity: 100
+  clampAngle: 85
 --- !u!1 &5984831390290950848
 GameObject:
   m_ObjectHideFlags: 0

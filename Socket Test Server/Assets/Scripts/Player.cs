@@ -4,17 +4,17 @@ using Random = UnityEngine.Random;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private CharacterController controller;
-    private bool[] inputs;
+    [NonSerialized] public Vector3 colour; 
+    private CharacterController controller;
+    [SerializeField] private float gravity = -9.81f;
+    public int id;
 
     [SerializeField] private float jumpSpeed = 5f;
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float gravity = -9.81f;
+    public int score;
+    private bool[] inputs;
 
     public string username;
-    public int id;
-    public int score;
-    [NonSerialized] public Vector3 colour;
 
 
     private float yVelocity;
@@ -25,6 +25,8 @@ public class Player : MonoBehaviour
         moveSpeed *= Time.fixedDeltaTime;
         jumpSpeed *= Time.fixedDeltaTime;
 
+
+        controller = GetComponent<CharacterController>();
         var meshRenderer = GetComponentInChildren<MeshRenderer>();
 
         if (meshRenderer != null)
@@ -42,6 +44,29 @@ public class Player : MonoBehaviour
         ServerSend.PlayerColour(this);
     }
 
+    private void FixedUpdate()
+    {
+        Vector2 inputDirection = Vector2.zero;
+        if (inputs[0])
+        {
+            inputDirection.y += 1;
+        }
+        if (inputs[1])
+        {
+            inputDirection.y -= 1;
+        }
+        if (inputs[2])
+        {
+            inputDirection.x -= 1;
+        }
+        if (inputs[3])
+        {
+            inputDirection.x += 1;
+        }
+
+        Move(inputDirection);
+    }
+
     /// <summary>
     ///     Spawns the player
     /// </summary>
@@ -52,45 +77,30 @@ public class Player : MonoBehaviour
         id = _id;
         username = _username;
         score = 0;
-
         inputs = new bool[5];
+
     }
 
-    ///
-    public void FixedUpdate()
-    {
-        var _inputDirection = Vector2.zero;
-
-        //Moves the player depending on what keys the client pressed.
-        if (inputs[0]) _inputDirection.y += 1;
-        if (inputs[1]) _inputDirection.y -= 1;
-        if (inputs[2]) _inputDirection.x -= 1;
-        if (inputs[3]) _inputDirection.x += 1;
-
-        Move(_inputDirection);
-    }
 
     /// <summary>Calculates the player's desired direction and moves them.</summary>
     /// <param name="_inputDirection"></param>
     private void Move(Vector2 _inputDirection)
     {
-        //Moves the player in the direction chosen by incoming keys.
-        var moveDirection = transform.right * _inputDirection.x + transform.forward * _inputDirection.y;
+        Vector3 moveDirection = transform.right * _inputDirection.x + transform.forward * _inputDirection.y;
         moveDirection *= moveSpeed;
 
-        //Jump and gravity
         if (controller.isGrounded)
         {
             yVelocity = 0f;
-            if (inputs[4]) yVelocity += jumpSpeed;
+            if (inputs[4])
+            {
+                yVelocity = jumpSpeed;
+            }
         }
-
         yVelocity += gravity;
 
         moveDirection.y = yVelocity;
         controller.Move(moveDirection);
-
-       
 
         //Sends their new position and rotation back to the client.
         ServerSend.PlayerPosition(this);
@@ -107,7 +117,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    ///     Destroy this player, this is here so client doesnt have to inherit from monobehaviour.
+    ///     Destroy this player, this is here so client doesn't have to inherit from monobehaviour.
     /// </summary>
     public void DestroyPlayer()
     {

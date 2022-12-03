@@ -8,17 +8,23 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager instance;
 
-    [Header("Menu")] public TMP_InputField AddressField;
-
+    //Menu variables
+    [Header("Menu")] public TMP_InputField ipAddressField;
+    [SerializeField] private GameObject startMenuPanel;
     [SerializeField] private Button connectButton;
     [SerializeField] public TMP_Text errorText;
+    public TMP_InputField usernameField;
 
-    [Header("UI")] [SerializeField] private GameObject hudPanel;
+    //UI variables
+    [Header("UI")] 
+    [SerializeField] private GameObject hudPanel;
+    public TMP_Text scoreText;
+    public TMP_Text timerText;
+    public TMP_Text isPredictingText;
+
+
 
     private Regex ipRegex;
-    public TMP_Text scoreText;
-    [SerializeField] private GameObject startMenuPanel;
-    public TMP_InputField usernameField;
 
 
     private void Awake()
@@ -63,22 +69,22 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public void ConnectToServer()
     {
-        //Removes whitespace (vital for regex to work, and later connection to thus ip)
-        AddressField.text = AddressField.text.Trim();
+        //Removes whitespace (vital for regex to work, and later connection to server)
+        ipAddressField.text = ipAddressField.text.Trim();
         usernameField.text = usernameField.text.Trim();
 
 
         //If string empty then connect to local host
-        if (string.IsNullOrEmpty(AddressField.text))
+        if (string.IsNullOrEmpty(ipAddressField.text))
         {
-            AddressField.text = "127.0.01";
+            ipAddressField.text = "127.0.01";
             ConnectingText();
             Client.instance.ConnectToServer();
             return;
         }
 
         //If a valid Ip address then connect to that IP
-        if (ipRegex.IsMatch(AddressField.text))
+        if (ipRegex.IsMatch(ipAddressField.text))
         {
             //And checks if the username is valid.
             if (string.IsNullOrEmpty(usernameField.text))
@@ -104,22 +110,45 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void ConnectingText()
     {
+        //Hides menu to go to loading screen.
         connectButton.interactable = false;
         usernameField.interactable = false;
-        AddressField.interactable = false;
+        ipAddressField.interactable = false;
         connectButton.gameObject.SetActive(false);
         usernameField.gameObject.SetActive(false);
-        AddressField.gameObject.SetActive(false);
+        ipAddressField.gameObject.SetActive(false);
 
         errorText.gameObject.SetActive(true);
         errorText.color = Color.black;
-        errorText.text = "Connecting";
+        errorText.text = $"Connecting to {ipAddressField.text}";
     }
 
-    public void HideMenu()
+    //Toggles the menu
+    public void MenuToggle(bool isHidden = true)
     {
-        errorText.gameObject.SetActive(false);
-        startMenuPanel.SetActive(false);
-        hudPanel.SetActive(true);
+        //If menu is hidden then display HUD
+        if (isHidden)
+        {
+            errorText.gameObject.SetActive(false);
+            startMenuPanel.SetActive(false);
+            hudPanel.SetActive(true);
+        }
+        //Show menu.
+        else
+        {
+            errorText.gameObject.SetActive(true);
+            startMenuPanel.SetActive(true);
+            hudPanel.SetActive(false);
+
+            connectButton.interactable = true;
+            usernameField.interactable = true;
+            ipAddressField.interactable = true;
+            connectButton.gameObject.SetActive(true);
+            usernameField.gameObject.SetActive(true);
+            ipAddressField.gameObject.SetActive(true);
+        }
+        
     }
+
+
 }

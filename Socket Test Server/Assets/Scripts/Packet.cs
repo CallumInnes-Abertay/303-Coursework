@@ -7,12 +7,14 @@ using UnityEngine;
 public enum ServerPackets
 {
     Welcome = 1,
+    StartTimer,
     SpawnPlayer,
     PlayerPosition,
     PlayerRotation,
     PlayerColour,
     PlayerDisconnected,
     SpawnCollectable,
+    ScoreUpdate,
     StopServer
 }
 
@@ -24,6 +26,9 @@ public enum ClientPackets
     CollectableCollision
 }
 
+/// <summary>
+///     Modified class from https://github.com/tom-weiland
+/// </summary>
 public class Packet : IDisposable
 {
     private List<byte> buffer;
@@ -35,7 +40,7 @@ public class Packet : IDisposable
     /// <summary>Creates a new empty packet (without an ID).</summary>
     public Packet()
     {
-        buffer = new List<byte>(); // Initialize buffer
+        buffer = new List<byte>(); // Initialise buffer
         readPos = 0; // Set readPos to 0
     }
 
@@ -43,7 +48,7 @@ public class Packet : IDisposable
     /// <param name="_id">The packet ID.</param>
     public Packet(int _id)
     {
-        buffer = new List<byte>(); // Initialize buffer
+        buffer = new List<byte>(); // Initialise buffer
         readPos = 0; // Set readPos to 0
 
         Write(_id); // Write packet id to the buffer
@@ -53,7 +58,7 @@ public class Packet : IDisposable
     /// <param name="_data">The bytes to add to the packet.</param>
     public Packet(byte[] _data)
     {
-        buffer = new List<byte>(); // Initialize buffer
+        buffer = new List<byte>(); // Initialise buffer
         readPos = 0; // Set readPos to 0
 
         SetBytes(_data);
