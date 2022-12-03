@@ -6,7 +6,6 @@ using UnityEngine;
 using Ping = System.Net.NetworkInformation.Ping;
 using Random = UnityEngine.Random;
 
-
 public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager instance;
@@ -64,35 +63,42 @@ public class NetworkManager : MonoBehaviour
         //Changes in the editor for debugging purposes.
         playerPrefab.name = $"Player {_username}";
         //Random position to spawn
-        Vector3 spawnPos = new Vector3(Random.Range(-7.0f, 7.0f), 6.0f, Random.Range(-5.0f, 5.0f));
+        var spawnPos = new Vector3(Random.Range(-7.0f, 7.0f), 6.0f, Random.Range(-5.0f, 5.0f));
 
         //Spawns the player.
         return Instantiate(playerPrefab, spawnPos, Quaternion.identity).GetComponent<Player>();
     }
 
-    public int PingClient(string _ip)
+    public static int PingClient(string _ip)
     {
+        //Removes the port from the ip.
         _ip = _ip.Remove(_ip.LastIndexOf(":", StringComparison.Ordinal));
 
         Ping pinger;
         pinger = new Ping();
-        var reply = pinger.Send(_ip);
         var alltimes = new List<int>();
+        PingReply reply = null;
 
-        for (var i = 0; i < 5; i++)
+        //Pings the client 4 times for an average.
+        for (var i = 0; i < 4; i++)
+        {
+            reply = pinger.Send(_ip);
             if (reply is { Status: IPStatus.Success })
             {
                 var timeTaken = (int)(reply.RoundtripTime / 2);
+                Debug.Log($"Ping: {timeTaken}");
                 alltimes.Add(timeTaken);
             }
             else
             {
+                Debug.Log("Pinger failed.");
                 pinger.Dispose();
                 return -1;
             }
+        }
 
         pinger.Dispose();
-        Debug.Log($"Ping:{alltimes.Average()}");
+        Debug.Log($"Ping {_ip}: {alltimes.Average()}");
         return (int)(alltimes.Average() / 2);
     }
 

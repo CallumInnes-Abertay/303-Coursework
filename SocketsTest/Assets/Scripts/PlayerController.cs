@@ -5,11 +5,11 @@ public class PlayerController : MonoBehaviour
 {
     [NonSerialized] public PlayerManager pManager;
 
-    public  float speed;
-    [SerializeField] private float jumpHeight;
+   [SerializeField] private float speed;
+   [SerializeField] private float jumpHeight;
+    private float gravity = -9.81f;
     private CharacterController controller;
     private Vector3 velocity;
-    private float gravity = -9.81f;
 
 
     private void Update()
@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
     {
         pManager = GetComponent<PlayerManager>();
         controller = GetComponent<CharacterController>();
+
     }
 
     private void Awake()

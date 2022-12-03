@@ -39,7 +39,7 @@ public class ServerHandle
         }
 
 
-        var ping = NetworkManager.instance.PingClient(ip.ToString());
+        var ping = NetworkManager.PingClient(ip.ToString());
 
 
         //Ping cant be less than 0 (-1 ping is the error message)
@@ -55,6 +55,7 @@ public class ServerHandle
             ServerSend.StartTimer(_fromClient, NetworkManager.instance.Time);
         }
 
+        //Start the timer only on the first client joining.
         if (Server.players.Count < 2)
         {
             NetworkManager.instance.StartTimer();
@@ -69,9 +70,7 @@ public class ServerHandle
     /// <param name="_packet">The new position/rotation of the client.</param>
     public static void PlayerMovement(int _fromClient, Packet _packet)
     {
-        //Amount of different inputs
         var position = _packet.ReadVector3();
-
         var rotation = _packet.ReadQuaternion();
 
         try

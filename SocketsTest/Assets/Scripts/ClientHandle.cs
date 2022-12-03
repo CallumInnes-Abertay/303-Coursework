@@ -150,7 +150,7 @@ public class ClientHandle : MonoBehaviour
             player.Score = score;
             if(player.gameObject.CompareTag("Player"))
             {
-                return;
+                continue;
             }
 
             player.gameObject.GetComponentInChildren<HoverText>().scoreText.text = player.Score.ToString();
@@ -168,9 +168,11 @@ public class ClientHandle : MonoBehaviour
 
         Debug.Log(msg);
 #if UNITY_EDITOR
+        GameManager.instance.StopTimer();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         //EditorApplication.isPlaying = false;
 #endif
+        GameManager.instance.StopTimer();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Application.Quit();
     }

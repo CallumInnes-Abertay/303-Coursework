@@ -12,17 +12,12 @@ public class Client : MonoBehaviour
     public static Client instance;
     private static readonly int dataBufferSize = 4096;
     private static Dictionary<int, PacketHandler> packetHandler;
-
-    //private string ip = "127.0.0.1";
-    // private string ip = "192.168.1.64";
     private string ip;
 
     private bool isConnected;
     [NonSerialized] public int myId = 0;
     public TCP tcp;
     public UDP udp;
-    //For all packet functions.
-    private delegate void PacketHandler(Packet packet);
 
 
     private void OnApplicationQuit()
@@ -58,7 +53,7 @@ public class Client : MonoBehaviour
     }
 
     /// <summary>
-    /// Keeps the connection message up till client connects.
+    ///     Keeps the connection message up till client connects.
     /// </summary>
     /// <returns>Nothing, waiting </returns>
     private IEnumerator WaitUntilConnected()
@@ -69,7 +64,7 @@ public class Client : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets up the client for connection to the server.
+    ///     Sets up the client for connection to the server.
     /// </summary>
     private void InitialiseClientData()
     {
@@ -95,7 +90,7 @@ public class Client : MonoBehaviour
 
 
     /// <summary>
-    /// For disconnecting client from server.
+    ///     For disconnecting client from server.
     /// </summary>
     private void Disconnect()
     {
@@ -110,18 +105,21 @@ public class Client : MonoBehaviour
         }
     }
 
+    //For all packet functions.
+    private delegate void PacketHandler(Packet packet);
+
 
     /// <summary>
-    /// Handling TCP connections to server.
+    ///     Handling TCP connections to server.
     /// </summary>
     public class TCP
     {
+        private int attempt;
         private byte[] receiveBuffer;
         private Packet receivedData;
         public TcpClient socket;
 
         private NetworkStream stream;
-        private int attempt;
 
 
         public void Connect()
@@ -133,7 +131,7 @@ public class Client : MonoBehaviour
                 ReceiveBufferSize = dataBufferSize,
                 SendBufferSize = dataBufferSize,
                 ReceiveTimeout = 3000,
-                SendTimeout = 1000,
+                SendTimeout = 1000
             };
 
             Debug.Log($"Starting connections with {instance.ip}");
@@ -144,7 +142,6 @@ public class Client : MonoBehaviour
             {
                 //Starts an async request to connect to the server.
                 socket.BeginConnect(instance.ip, Port, ConnectCallback, socket);
-                
             }
             catch (SocketException e)
             {
@@ -161,14 +158,14 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Async call back for connecting to server
+        ///     Async call back for connecting to server
         /// </summary>
         /// <param name="_result">The result of the async operation</param>
         private void ConnectCallback(IAsyncResult _result)
         {
             try
             {
-                bool success = _result.AsyncWaitHandle.WaitOne(5000, true);
+                var success = _result.AsyncWaitHandle.WaitOne(5000, true);
                 Debug.Log("Connecting");
 
                 //Has successfully connected, so thus stop connecting
@@ -181,7 +178,8 @@ public class Client : MonoBehaviour
                 //Hasn't connected
                 else
                 {
-                    Debug.Log($"Failed to connect to server, is it up? Or do you have the right IP? \nAttempt:{attempt}");
+                    Debug.Log(
+                        $"Failed to connect to server, is it up? Or do you have the right IP? \nAttempt:{attempt}");
                     if (attempt < 3)
                     {
                         attempt++;
@@ -194,9 +192,10 @@ public class Client : MonoBehaviour
 
                         socket.Close();
                     }
+
                     return;
                 }
-                
+
                 //Gets the network stream for sending and receiving data.
                 stream = socket.GetStream();
 
@@ -214,7 +213,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Sending data to server
+        ///     Sending data to server
         /// </summary>
         /// <param name="packet">The data to send</param>
         public void SendData(Packet packet)
@@ -266,7 +265,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Handles all incoming TCP data.
+        ///     Handles all incoming TCP data.
         /// </summary>
         /// <param name="_data">The data to handle.</param>
         /// <returns>If the packet is to be reset, for reuse.</returns>
@@ -303,10 +302,10 @@ public class Client : MonoBehaviour
                 });
 
                 _packetLength = 0;
-                if (receivedData.UnreadLength() < 4) 
+                if (receivedData.UnreadLength() < 4)
                     continue;
                 _packetLength = receivedData.ReadInt();
-                if (_packetLength <= 0) 
+                if (_packetLength <= 0)
                     return true;
             }
 
@@ -316,7 +315,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Disconnects from the server
+        ///     Disconnects from the server
         /// </summary>
         private void Disconnect()
         {
@@ -330,7 +329,7 @@ public class Client : MonoBehaviour
     }
 
     /// <summary>
-    /// Handling UDP connection to server.
+    ///     Handling UDP connection to server.
     /// </summary>
     public class UDP
     {
@@ -362,7 +361,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Sends data via UDP.
+        ///     Sends data via UDP.
         /// </summary>
         /// <param name="_packet">Data to send</param>
         public void SendData(Packet _packet)
@@ -429,7 +428,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Disconnects the UDP connection.
+        ///     Disconnects the UDP connection.
         /// </summary>
         private void Disconnect()
         {

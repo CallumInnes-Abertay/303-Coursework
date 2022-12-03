@@ -62,16 +62,16 @@ public class PlayerPrediction : MonoBehaviour
              instead we're guessing the position of all externals players, and thus should
             return on any instance of the local player as so to not cause jerky player movement.
             */
-            if (value.gameObject.gameObject.CompareTag("Player"))
+            if (value.gameObject.CompareTag("Player"))
             {
-                return;
+                continue;
             }
 
             //if(player.Id == localPlayerId)
             //If there is no past data to work off.
             if (value.Positions == null || !value.Positions.Any())
             {
-                return;
+                continue;
             }
 
             var newPosition = CalculateNewPosition(value);
@@ -80,10 +80,6 @@ public class PlayerPrediction : MonoBehaviour
             if (newPosition != Vector3.zero)
             {
                 value.gameObject.transform.position = newPosition;
-            }
-            else
-            {
-                return;
             }
         }
     }
@@ -123,7 +119,7 @@ public class PlayerPrediction : MonoBehaviour
 
         float timeSinceLastTick = GameManager.instance.Time - lastPosition.Time;
 
-        Vector3 displacement = new Vector3(speed.x * timeSinceLastTick, speed.y * timeSinceLastTick,
+        Vector3 displacement = new(speed.x * timeSinceLastTick, speed.y * timeSinceLastTick,
             speed.z * timeSinceLastTick);
 
         var newPos = gameObject.transform.position + displacement;

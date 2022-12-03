@@ -77,7 +77,6 @@ public class GameManager : MonoBehaviour
         playerManager.Username = _username;
         playerManager.Score = 0;
 
-
         //Adds the player (regardless if they're local or external_ to a dictionary of all players
         //for affecting all players
         players.Add(_id, playerManager);
@@ -100,5 +99,15 @@ public class GameManager : MonoBehaviour
     {
         Time = _serverTime;
         isTimerRunning = true;
+    }
+
+
+    /// <summary>
+    /// Stops the timer client side by turning off FixedUpdate.
+    /// </summary>
+    public void StopTimer()
+    {
+        Time = 0;
+        isTimerRunning = false;
     }
 }
