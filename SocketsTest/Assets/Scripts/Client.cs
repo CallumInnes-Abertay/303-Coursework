@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
+using UnityEditor;
 using UnityEngine;
 
 public class Client : MonoBehaviour
 {
-    private const int Port = 50000;
     public static Client instance;
+    private const int Port = 50000;
     private static readonly int dataBufferSize = 4096;
+    private delegate void PacketHandler(Packet _packet);
     private static Dictionary<int, PacketHandler> packetHandler;
     private string ip;
 
@@ -19,7 +21,7 @@ public class Client : MonoBehaviour
     public TCP tcp;
     public UDP udp;
 
-
+    //When the player closes the application it'll tell the server they've disconnected.
     private void OnApplicationQuit()
     {
         Disconnect();
@@ -55,7 +57,7 @@ public class Client : MonoBehaviour
     /// <summary>
     ///     Keeps the connection message up till client connects.
     /// </summary>
-    /// <returns>Nothing, waiting </returns>
+    /// <returns>The same object as it waits. </returns>
     private IEnumerator WaitUntilConnected()
     {
         //Busy wait until statement true
@@ -64,7 +66,7 @@ public class Client : MonoBehaviour
     }
 
     /// <summary>
-    ///     Sets up the client for connection to the server.
+    /// Sets up the client for connection to the server.
     /// </summary>
     private void InitialiseClientData()
     {
@@ -91,7 +93,7 @@ public class Client : MonoBehaviour
 
 
     /// <summary>
-    ///     For disconnecting client from server.
+    /// For disconnecting client from server.
     /// </summary>
     private void Disconnect()
     {
@@ -106,10 +108,6 @@ public class Client : MonoBehaviour
         }
     }
 
-    //For all packet functions.
-    private delegate void PacketHandler(Packet packet);
-
-
     /// <summary>
     ///     Handling TCP connections to server.
     /// </summary>
@@ -122,12 +120,14 @@ public class Client : MonoBehaviour
 
         private NetworkStream stream;
 
-
+        /// <summary>
+        /// Start the process of connecting to the server
+        /// </summary>
         public void Connect()
         {
             socket = new TcpClient
             {
-                //Sets both the receive and send buffers to size for consistensty sake
+                //Sets both the receive and send buffers to size for consistency sake
                 //(this is done on both server/client side to ensure it's read correctly)
                 ReceiveBufferSize = dataBufferSize,
                 SendBufferSize = dataBufferSize,
@@ -209,12 +209,11 @@ public class Client : MonoBehaviour
             catch (Exception e)
             {
                 Debug.Log(e);
-                throw;
             }
         }
 
         /// <summary>
-        ///     Sending data to server
+        /// Sending data to server
         /// </summary>
         /// <param name="packet">The data to send</param>
         public void SendData(Packet packet)
@@ -231,7 +230,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        ///     Receives incoming TCP data.
+        /// Receives incoming TCP data.
         /// </summary>
         /// <param name="_result">The result of the async operation</param>
         private void ReceiveCallback(IAsyncResult _result)
@@ -266,7 +265,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        ///     Handles all incoming TCP data.
+        /// Handles all incoming TCP data.
         /// </summary>
         /// <param name="_data">The data to handle.</param>
         /// <returns>If the packet is to be reset, for reuse.</returns>
@@ -296,9 +295,19 @@ public class Client : MonoBehaviour
                         //Gets the id of the packet
                         //This would be the id of the function the server sent from,
                         //so we can get the appropriate handle response.
-                        var _packetId = _packet.ReadInt();
+                        var packetId = _packet.ReadInt();
+                        var isDefined = Enum.IsDefined(typeof(ServerPackets), packetId);
+
+                        if (!isDefined)
+                        {
+                            Debug.Log("PacketID not defined");
+                            return;
+                        }
+
+
                         //Call the appropriate function to handle this specific packet.
-                        packetHandler[_packetId](_packet);
+                        packetHandler[packetId](_packet);
+                        Debug.Log($"Handling TCP request ID:{packetId}");
                     }
                 });
 
@@ -372,7 +381,7 @@ public class Client : MonoBehaviour
                 //Starts the packet with ID so the server knows who sent it.
                 _packet.InsertInt(instance.myId);
                 //Starts sending this data.
-                socket?.BeginSend(_packet.ToArray(), _packet.Length(), null, null);
+                socket.BeginSend(_packet.ToArray(), _packet.Length(), null, null);
             }
             catch (Exception e)
             {
@@ -381,8 +390,9 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
+        /// Receives incoming UDP data.
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="result">The result of the async operation.</param>
         private void ReceiveCallback(IAsyncResult result)
         {
             try
@@ -422,6 +432,15 @@ public class Client : MonoBehaviour
                 using (var packet = new Packet(_data))
                 {
                     var packetId = packet.ReadInt();
+
+                    //If packetId is not in the enum then return.
+                    var isDefined = Enum.IsDefined(typeof(ServerPackets), packetId);
+                    if (!isDefined)
+                    {
+                        Debug.Log("PacketID not defined");
+                        return;
+                    }
+
                     // Call whatever appropriate function to handle this packet.
                     packetHandler[packetId](packet);
                 }
@@ -429,7 +448,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        ///     Disconnects the UDP connection.
+        /// Disconnects the UDP connection.
         /// </summary>
         private void Disconnect()
         {

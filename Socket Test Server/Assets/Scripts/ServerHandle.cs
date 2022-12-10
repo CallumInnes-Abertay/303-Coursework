@@ -45,13 +45,13 @@ public class ServerHandle
         if (ping >= 0)
         {
             //Adjust the current time to ping 
-            var currentTime = NetworkManager.instance.Time + ping;
+            var currentTime = NetworkManager.instance.Tick + ping;
             ServerSend.StartTimer(_fromClient, currentTime);
         }
         else
         {
             Debug.Log("Error: Could not ping client");
-            ServerSend.StartTimer(_fromClient, NetworkManager.instance.Time);
+            ServerSend.StartTimer(_fromClient, NetworkManager.instance.Tick);
         }
 
         //Start the timer only on the first client joining.
@@ -69,14 +69,17 @@ public class ServerHandle
     /// <param name="_packet">The new position/rotation of the client.</param>
     public static void PlayerMovement(int _fromClient, Packet _packet)
     {
+        //Reads all the keys pressed by the client
         bool[] inputs = new bool[_packet.ReadInt()];
         for (int i = 0; i < inputs.Length; i++)
         {
             inputs[i] = _packet.ReadBool();
         }
-        Quaternion _rotation = _packet.ReadQuaternion();
+        //And gets their rotation
+        Quaternion rotation = _packet.ReadQuaternion();
 
-        Server.clients[_fromClient].player.SetInput(inputs, _rotation);
+        //Update the players 
+        Server.clients[_fromClient].player.SetInput(inputs, rotation);
     }
 
     /// <summary>
@@ -99,7 +102,7 @@ public class ServerHandle
             ServerSend.ScoreUpdate(player);
         }
 
-
+        //Debug the players score.
         foreach (var player in Server.players)
             Debug.Log($"{player.Value.username} has {player.Value.score} score");
 

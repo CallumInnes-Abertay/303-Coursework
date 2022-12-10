@@ -20,7 +20,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject hudPanel;
     public TMP_Text scoreText;
     public TMP_Text timerText;
+    public TMP_Text serverPosText;
     public TMP_Text isPredictingText;
+
 
 
 
@@ -50,10 +52,10 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    ///     Displays Error message to user using a text field.
+    /// Displays Error message to user using a text field.
     /// </summary>
     /// <param name="errorMessage">The error message to display.</param>
-    /// <returns>Nothing.</returns>
+    /// <returns>The same object until a set time has passed. </returns>
     private IEnumerator DisplayError(string errorMessage)
     {
         errorText.gameObject.SetActive(true);
@@ -65,7 +67,7 @@ public class UIManager : MonoBehaviour
 
 
     /// <summary>
-    ///     Ran when connect to server button is pressed.
+    /// Ran when connect to server button is pressed.
     /// </summary>
     public void ConnectToServer()
     {
@@ -93,8 +95,9 @@ public class UIManager : MonoBehaviour
                 return;
             }
 
+            
+            //Start the process of connecting to the server.
             ConnectingText();
-
             Client.instance.ConnectToServer();
         }
         //In the case it's not a valid IP address then ask user to redo

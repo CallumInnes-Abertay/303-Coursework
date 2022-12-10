@@ -6,12 +6,13 @@ using UnityEngine;
 /// </summary>
 public class PreviousPositions
 {
-    public int Time { get; }
+    public int Tick { get; }
     public Vector3 Position { get; }
 
-    public PreviousPositions(int _time, Vector3 _position)
+    //Constructor
+    public PreviousPositions(int _tick, Vector3 _position)
     {
-        Time = _time;
+        Tick = _tick;
         Position = _position;
     }
 }

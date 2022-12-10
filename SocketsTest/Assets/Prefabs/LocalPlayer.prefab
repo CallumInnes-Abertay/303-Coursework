@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 3665299290799684810}
   - component: {fileID: 9056879161524416986}
   - component: {fileID: 8449941147299482180}
+  - component: {fileID: 5674640483803137481}
+  - component: {fileID: 2520140021171872442}
   m_Layer: 0
   m_Name: LocalPlayer
   m_TagString: Player
@@ -47,8 +49,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dba54814055a6b48b2eee7f6b363591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 10
-  jumpHeight: 7
+  speed: 5
+  jumpHeight: 10
+  correctionThreshold: 0.1
+  controller: {fileID: 5674640483803137481}
 --- !u!114 &8449941147299482180
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,6 +65,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77b49bb2c6003f04b8ad7055fa0af8a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  correctionThreshold: 1.25
+--- !u!143 &5674640483803137481
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2742508387778874876}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &2520140021171872442
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2742508387778874876}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 1
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &3059629825948246846
 GameObject:
   m_ObjectHideFlags: 0
@@ -206,7 +245,7 @@ GameObject:
   - component: {fileID: 2194774052355073335}
   - component: {fileID: 7553563212324577880}
   - component: {fileID: 3344593400000569053}
-  - component: {fileID: 6930414913046297499}
+  - component: {fileID: 1867070904159812590}
   m_Layer: 0
   m_Name: Model
   m_TagString: Player
@@ -279,7 +318,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &6930414913046297499
+--- !u!136 &1867070904159812590
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

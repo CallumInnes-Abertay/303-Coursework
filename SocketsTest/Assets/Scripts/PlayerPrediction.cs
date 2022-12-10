@@ -2,13 +2,13 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-public class PlayerPrediction : MonoBehaviour
+public class  PlayerPrediction : MonoBehaviour
 {
-    private static PlayerPrediction instance;
+    public static PlayerPrediction instance;
     [SerializeField] private PlayerManager localPlayerId;
 
     [Range(0.0f, 50.0f)] [SerializeField] private int extrapolationThreshold;
-    [SerializeField] bool isPredicting = true;
+    public bool isPredicting = true;
 
 
     //Singleton pattern.
@@ -25,19 +25,21 @@ public class PlayerPrediction : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        //If timer hasnt started yet then return early.
-        if (GameManager.instance.Time <= 0)
-        {
-            return;
-        }
-
-        //Toggle predicting or not.
+        //Toggle predicting or not. (cant be in fixed update or will miss inputs)
         if (Input.GetKeyDown(KeyCode.P))
         {
             isPredicting = !isPredicting;
+        }
+    }
 
+    private void FixedUpdate()
+    {
+        //If timer hasnt started yet then return early.
+        if (GameManager.instance.Tick <= 1)
+        {
+            return;
         }
 
         if (isPredicting)
@@ -56,30 +58,30 @@ public class PlayerPrediction : MonoBehaviour
     /// </summary>
     void PredictMovement()
     {
-        foreach (var (key, value) in GameManager.players)
+        foreach (var (key, player) in GameManager.players)
         {
             /*We're not predicting the player movement since that's ran client side,
              instead we're guessing the position of all externals players, and thus should
             return on any instance of the local player as so to not cause jerky player movement.
             */
-            if (value.gameObject.CompareTag("Player"))
+            if (player.gameObject.CompareTag("Player"))
             {
                 continue;
             }
 
             //if(player.Id == localPlayerId)
             //If there is no past data to work off.
-            if (value.Positions == null || !value.Positions.Any())
+            if (player.Positions == null || !player.Positions.Any())
             {
                 continue;
             }
 
-            var newPosition = CalculateNewPosition(value);
+            var newPosition = CalculateNewPosition(player);
 
             //If there is a new position set that as the players new position.
             if (newPosition != Vector3.zero)
             {
-                value.gameObject.transform.position = newPosition;
+                player.SetPosition(newPosition);
             }
         }
     }
@@ -97,16 +99,16 @@ public class PlayerPrediction : MonoBehaviour
         if (lastPosition == null) throw new ArgumentNullException(nameof(lastPosition));
         if (secondLastPosition == null) throw new ArgumentNullException(nameof(secondLastPosition));
 
-        Debug.Log($"lastPosition Time: {lastPosition.Time}\n secondLastPosition Time:{secondLastPosition.Time}");
+        Debug.Log($"lastPosition Time: {lastPosition.Tick}\n secondLastPosition Time:{secondLastPosition.Tick}");
         Debug.Log($"lastPosition Position: {lastPosition.Position}\n secondLastPosition:{secondLastPosition.Position}");
 
 
-        if (lastPosition.Time == 0 || secondLastPosition.Time == 0)
+        if (lastPosition.Tick == 0 || secondLastPosition.Tick == 0)
         {
             return Vector3.zero;
         }
 
-        float timeBetweenPositions = lastPosition.Time - secondLastPosition.Time;
+        float timeBetweenPositions = lastPosition.Tick - secondLastPosition.Tick;
 
         if (timeBetweenPositions == 0)
         {
@@ -117,7 +119,7 @@ public class PlayerPrediction : MonoBehaviour
         var speed = (secondLastPosition.Position - lastPosition.Position) / timeBetweenPositions;
 
 
-        float timeSinceLastTick = GameManager.instance.Time - lastPosition.Time;
+        float timeSinceLastTick = GameManager.instance.Tick - lastPosition.Tick;
 
         Vector3 displacement = new(speed.x * timeSinceLastTick, speed.y * timeSinceLastTick,
             speed.z * timeSinceLastTick);

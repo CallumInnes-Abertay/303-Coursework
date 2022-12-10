@@ -19,8 +19,9 @@ public class ClientSend : MonoBehaviour
     }
 
     #region PacketFunctions
-
-    /// <summary>Lets the server know the welcome was received via TCP.</summary>
+    /// <summary>
+    /// Lets the server know the welcome was received via TCP.
+    /// </summary>
     public static void WelcomeReceived()
     {
         using (var _packet = new Packet((int)ClientPackets.WelcomeReceived))
@@ -32,8 +33,10 @@ public class ClientSend : MonoBehaviour
         }
     }
 
-    /// <summary>Sends player input to the server via UDP.</summary>
-    /// <param name="_player">The position of this player.</param>
+    /// <summary>
+    /// Sends player input and rotation to the server via UDP.
+    /// </summary>
+    /// <param name="_inputs">The inputs to send.</param>
     public static void PlayerMovement(bool[] _inputs)
     {
         using (Packet _packet = new Packet((int)ClientPackets.PlayerMovement))
@@ -43,15 +46,15 @@ public class ClientSend : MonoBehaviour
             {
                 _packet.Write(_input);
             }
+            //Gets the the local players rotation and sends it.
             _packet.Write(GameManager.players[Client.instance.myId].transform.rotation);
-
             SendUDPData(_packet);
         }
     }
 
 
     /// <summary>
-    ///     Sends the player id and username of who collected the id via TCP
+    /// Sends the player id and username of who collected the id via TCP
     /// </summary>
     public static void CollectableCollision()
     {
@@ -59,7 +62,6 @@ public class ClientSend : MonoBehaviour
         {
             _packet.Write(Client.instance.myId);
             _packet.Write(UIManager.instance.usernameField.text);
-
 
             SendTCPData(_packet);
         }

@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-
     private float horizontalRotation;
     private float verticalRotation;
     [SerializeField] private PlayerManager player;
@@ -10,6 +9,12 @@ public class CameraController : MonoBehaviour
     [Header("Camera Settings")]
     [SerializeField] private float sensitivity = 100f;
     [SerializeField] private float clampAngle = 85f;
+
+    private void Awake()
+    {
+        //Locks the cursor.
+        Cursor.lockState = CursorLockMode.Locked;
+    }
 
     private void Start()
     {
@@ -20,6 +25,7 @@ public class CameraController : MonoBehaviour
     private void Update()
     {
         Look();
+        //Shows which way the player is looking.
         Debug.DrawRay(transform.position, transform.forward * 2, Color.red);
     }
 
@@ -28,7 +34,7 @@ public class CameraController : MonoBehaviour
     /// </summary>
     private void Look()
     {
-
+        //Maps the vertical and horizontal mouse movements to vectors. 
         var _mouseVertical = -Input.GetAxis("Mouse Y");
         var _mouseHorizontal = Input.GetAxis("Mouse X");
 

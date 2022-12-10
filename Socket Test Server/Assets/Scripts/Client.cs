@@ -60,6 +60,7 @@ public class Client
             player = null;
         });
 
+        //Close the tcp and udp sockets and set their fields to null.
         tcp.Disconnect();
         udp.Disconnect();
 
@@ -104,6 +105,7 @@ public class Client
             socket.ReceiveBufferSize = DataBufferSize;
             socket.SendBufferSize = DataBufferSize;
 
+            //returns the network stream.
             stream = socket.GetStream();
 
             receivedData = new Packet();
@@ -116,10 +118,15 @@ public class Client
             ServerSend.Welcome(id, "Welcome to the server!");
         }
 
+        /// <summary>
+        /// Sends data to the client via TCP.
+        /// </summary>
+        /// <param name="_packet">The data to be sent.</param>
         public void SendData(Packet _packet)
         {
             try
             {
+                //Sends the data and its length through a networkstream.
                 if (socket != null) stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
             }
             catch (Exception ex)
@@ -129,14 +136,14 @@ public class Client
         }
 
         /// <summary>
-        /// 
+        /// Reads all incoming data coming from the client
         /// </summary>
-        /// <param name="_result"></param>
+        /// <param name="_result">The status of the async operation..</param>
         private void ReceiveCallback(IAsyncResult _result)
         {
             try
             {
-                //Ends the network stream read and returns the number of bytes read.
+                //Ends the async network stream read and returns the number of bytes read.
                 var byteLength = stream.EndRead(_result);
 
                 //If there was no bytes, then the client is no longer sending data and must have disconnected.
@@ -170,22 +177,24 @@ public class Client
         /// <returns></returns>
         private bool HandleData(byte[] _data)
         {
+            
             var packetLength = 0;
 
             //prepares the byte array to be read.
             receivedData.SetBytes(_data);
 
-            //If whats left is greater than an int (length)
+            //If whats left is greater than an int (length) then it contains a packet.
             if (receivedData.UnreadLength() >= 4)
             {
                 //Get the length.
                 packetLength = receivedData.ReadInt();
                 //If the length is 0 or less then packet empty and return early.
                 if (packetLength <= 0)
+                    //returns true to reset the receivedData and allow reuse.
                     return true;
             }
 
-            //However, while theres still data to read.
+            //However, while the packet contains data and the length isnt longer than the packet we're currently reading.
             while (packetLength > 0 && packetLength <= receivedData.UnreadLength())
             {
                 var packetBytes = receivedData.ReadBytes(packetLength);
@@ -196,11 +205,24 @@ public class Client
                     using (var packet = new Packet(packetBytes))
                     {
                         var packetId = packet.ReadInt();
+                        //Return if not in the enum.
+                        var isDefined = Enum.IsDefined(typeof(ClientPackets), packetId);
+
+                        if (!isDefined)
+                        {
+                            Debug.Log("PacketID not defined");
+                            return;
+                        }
+
+
+                        //Call the correct method to handle the packet.
                         Server.packetHandlers[packetId](id, packet);
                     }
                 });
 
+                //Reset the packet length
                 packetLength = 0;
+                //If the received data from client still contains more data
                 if (receivedData.UnreadLength() >= 4)
                 {
                     packetLength = receivedData.ReadInt();
@@ -212,12 +234,18 @@ public class Client
             if (packetLength <= 1)
                 return true;
 
+            //We've read everything.
             return false;
         }
 
+        /// <summary>
+        /// Closes the TCP connection.
+        /// </summary>
         public void Disconnect()
         {
+            //Closes the socket
             socket.Close();
+            //And sets all fields to null for clean up.
             stream = null;
             receivedData = null;
             receiveBuffer = null;
@@ -230,7 +258,7 @@ public class Client
     /// </summary>
     public class UDP
     {
-        private readonly int id;
+        private int id;
         public IPEndPoint endPoint;
 
         public UDP(int _id)
@@ -238,11 +266,19 @@ public class Client
             id = _id;
         }
 
+        /// <summary>
+        /// Initialise method for the connected clients UDP datagrams.
+        /// </summary>
+        /// <param name="_endPoint">The IP address of the connected client.</param>
         public void Connect(IPEndPoint _endPoint)
         {
             endPoint = _endPoint;
         }
 
+        /// <summary>
+        /// Sends data to a client using UDP.
+        /// </summary>
+        /// <param name="_packet">The data to send.</param>
         public void SendData(Packet _packet)
         {
             Server.SendUDPData(endPoint, _packet);
@@ -261,12 +297,26 @@ public class Client
             {
                 using (var packet = new Packet(packetBytes))
                 {
+                    //Calls the appropriate handle method for the request.
                     var packetId = packet.ReadInt();
+
+                    //Return if packetID not in enum.
+                    var isDefined = Enum.IsDefined(typeof(ClientPackets), packetId);
+                    if (!isDefined)
+                    {
+                        Debug.Log("PacketID not defined");
+                        return;
+                    }
+
+                    //Call the correct method to handle the packet.
                     Server.packetHandlers[packetId](id, packet);
                 }
             });
         }
 
+        /// <summary>
+        /// Closes the UDP connection.
+        /// </summary>
         public void Disconnect()
         {
             endPoint = null;

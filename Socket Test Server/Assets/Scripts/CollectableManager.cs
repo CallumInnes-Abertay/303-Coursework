@@ -6,8 +6,10 @@ public class CollectableManager : MonoBehaviour
     public static CollectableManager instance;
 
     [SerializeField] private List<GameObject> collectables = new();
+    //The last postion of the thing.
     private Vector3 previousPosition;
 
+    //Singleton
     private void Awake()
     {
         if (instance == null)
@@ -22,6 +24,10 @@ public class CollectableManager : MonoBehaviour
         previousPosition = Vector3.zero;
     }
 
+    /// <summary>
+    /// Spawns a collectable in all clients
+    /// </summary>
+    /// <param name="newPos">If its should be a new position (the old one has been collected) or an old one (for joining players)</param>
     public void SpawnCollectable(bool newPos = true)
     {
         /*

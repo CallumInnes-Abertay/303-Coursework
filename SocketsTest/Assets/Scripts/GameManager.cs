@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -11,9 +13,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject externalPlayerPrefab;
     [SerializeField] private GameObject localPlayerPrefab;
 
-    [field: NonSerialized] public int Time { get; private set; }
+    [field: NonSerialized] public int Tick { get; private set; }
     private bool isTimerRunning;
-
+    
+    //Singleton
     private void Awake()
     {
         if (instance == null)
@@ -39,9 +42,11 @@ public class GameManager : MonoBehaviour
         if (!isTimerRunning) 
             return;
 
+        //Increment tick
+        Tick++;
 
-        Time++;
-        UIManager.instance.timerText.text = Time.ToString();
+        UIManager.instance.timerText.text = Tick.ToString();
+
     }
 
     /// <summary>Spawns a player.</summary>
@@ -66,16 +71,18 @@ public class GameManager : MonoBehaviour
 
             //Changes their colour
             var colorHsv = new Color(_colour.x, _colour.y, _colour.z, 1);
-            var renderer = _player.GetComponentInChildren(typeof(MeshRenderer)) as MeshRenderer;
-            renderer.material.color = colorHsv;
+            var meshRenderer = _player.GetComponentInChildren<MeshRenderer>();
+            meshRenderer.material.color = colorHsv;
         }
 
         //Caches player manager.
         var playerManager = _player.GetComponent<PlayerManager>();
 
+        //And inits the values.
         playerManager.Id = _id;
         playerManager.Username = _username;
         playerManager.Score = 0;
+
 
         //Adds the player (regardless if they're local or external_ to a dictionary of all players
         //for affecting all players
@@ -97,17 +104,16 @@ public class GameManager : MonoBehaviour
     /// <param name="_serverTime">The time the server has passed in (adjusted for ping time).</param>
     public void StartTimer(int _serverTime)
     {
-        Time = _serverTime;
+        Tick = _serverTime;
         isTimerRunning = true;
     }
-
 
     /// <summary>
     /// Stops the timer client side by turning off FixedUpdate.
     /// </summary>
     public void StopTimer()
     {
-        Time = 0;
+        Tick = 0;
         isTimerRunning = false;
     }
 }

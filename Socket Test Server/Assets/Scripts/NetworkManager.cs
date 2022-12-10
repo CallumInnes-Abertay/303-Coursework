@@ -11,7 +11,7 @@ public class NetworkManager : MonoBehaviour
     public static NetworkManager instance;
     private bool isTimerRunning;
     [SerializeField] private GameObject playerPrefab;
-    public int Time { get; private set; }
+    public int Tick { get; private set; }
 
     private void Awake()
     {
@@ -33,7 +33,7 @@ public class NetworkManager : MonoBehaviour
         Application.targetFrameRate = 60;
         Application.runInBackground = true;
 
-        Time = 0;
+        Tick = 0;
 
         Server.Start(12, 50000);
     }
@@ -43,8 +43,7 @@ public class NetworkManager : MonoBehaviour
         if (!isTimerRunning)
             return;
 
-        Time++;
-        //Debug.Log(Time);
+        Tick ++;
     }
 
 
@@ -55,7 +54,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    ///     Spawns player
+    /// Spawns player and generates random coordinates to spawn them at.
     /// </summary>
     /// <returns>A new player.</returns>
     public Player InstantiatePlayer(string _username)
@@ -69,6 +68,11 @@ public class NetworkManager : MonoBehaviour
         return Instantiate(playerPrefab, spawnPos, Quaternion.identity).GetComponent<Player>();
     }
 
+    /// <summary>
+    /// Pings the client to adjust their ping by a set amount.
+    /// </summary>
+    /// <param name="_ip">The IP address to ping.</param>
+    /// <returns>The ping to the client (Note not the roundtrip time)</returns>
     public static int PingClient(string _ip)
     {
         //Removes the port from the ip.
@@ -77,14 +81,14 @@ public class NetworkManager : MonoBehaviour
         Ping pinger;
         pinger = new Ping();
         var alltimes = new List<int>();
-        PingReply reply = null;
-
+        PingReply reply;
         //Pings the client 4 times for an average.
         for (var i = 0; i < 4; i++)
         {
             reply = pinger.Send(_ip);
             if (reply is { Status: IPStatus.Success })
             {
+                //Divided by 2 as we only want the distance to the client, not the roundtrip time.
                 var timeTaken = (int)(reply.RoundtripTime / 2);
                 Debug.Log($"Ping: {timeTaken}");
                 alltimes.Add(timeTaken);
@@ -102,15 +106,21 @@ public class NetworkManager : MonoBehaviour
         return (int)(alltimes.Average() / 2);
     }
 
+    /// <summary>
+    /// Starts the server side timer.
+    /// </summary>
     public void StartTimer()
     {
-        Time = 0;
+        Tick = 0;
         isTimerRunning = true;
     }
 
+    /// <summary>
+    /// Stop the serverside timer and resets it.
+    /// </summary>
     public void StopTimer()
     {
-        Time = 0;
+        Tick = 0;
         isTimerRunning = false;
     }
 }

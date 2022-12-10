@@ -26,7 +26,9 @@ public enum ClientPackets
     CollectableCollision
 }
 
-
+/// <summary>
+/// Modified class from https://github.com/tom-weiland
+/// </summary>
 public class Packet : IDisposable
 {
     private List<byte> buffer;

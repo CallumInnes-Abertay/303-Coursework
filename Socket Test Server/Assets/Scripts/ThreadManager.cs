@@ -32,8 +32,8 @@ public class ThreadManager : MonoBehaviour
         }
     }
 
-    /// <summary>Executes all code meant to run on the main thread. NOTE: Call this ONLY from the main thread.</summary>
-    public static void UpdateMain()
+    /// <summary>Executes all code meant to run on the main thread (as Unity only allows monobehaviour actions on main thread).</summary>
+    private static void UpdateMain()
     {
         if (!actionToExecuteOnMainThread)
             return;
@@ -45,7 +45,7 @@ public class ThreadManager : MonoBehaviour
             actionToExecuteOnMainThread = false;
         }
 
-        //Loops through every function passed in and runs them.
+        //Loops through every function passed in and runs them on this thread.
         foreach (var action in executeCopiedOnMainThread)
             action();
     }

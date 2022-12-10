@@ -46,10 +46,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b15bce543caf0046a4bb3e957039bbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gravity: -19.62
+  gravity: -18
   id: 0
-  jumpSpeed: 10
-  moveSpeed: 7
+  jumpHeight: 10
+  speed: 5
   score: 0
   username: 
 --- !u!143 &3593507203594507841

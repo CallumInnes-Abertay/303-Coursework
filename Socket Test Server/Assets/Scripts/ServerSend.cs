@@ -3,7 +3,7 @@ using UnityEngine;
 public class ServerSend
 {
     /// <summary>
-    ///     Sends TCP Data to one client.
+    /// Sends TCP Data to one client.
     /// </summary>
     /// <param name="_toClient">The client to send to.</param>
     /// <param name="_packet">The data to send.</param>
@@ -14,7 +14,7 @@ public class ServerSend
     }
 
     /// <summary>
-    ///     Sends TCP data to all clients.
+    /// Sends TCP data to all clients.
     /// </summary>
     /// <param name="packet">The data to send.</param>
     private static void SendTCPDataToAll(Packet packet)
@@ -25,7 +25,7 @@ public class ServerSend
     }
 
     /// <summary>
-    ///     Sends TCP data to all except one client.
+    /// Sends TCP data to all except one client.
     /// </summary>
     /// <param name="_exceptClient">The client to ignore.</param>
     /// <param name="_packet">The data to send.</param>
@@ -38,7 +38,7 @@ public class ServerSend
     }
 
     /// <summary>
-    ///     Sends UDP data to one client.
+    /// Sends UDP data to one client.
     /// </summary>
     /// <param name="_toClient">The client to send to.</param>
     /// <param name="_packet"></param>
@@ -49,7 +49,7 @@ public class ServerSend
     }
 
     /// <summary>
-    ///     Sends UDP data to all clients.
+    /// Sends UDP data to all clients.
     /// </summary>
     /// <param name="_packet">The data to send.</param>
     private static void SendUDPDataToAll(Packet _packet)
@@ -70,8 +70,10 @@ public class ServerSend
                 Server.clients[i].udp.SendData(_packet);
     }
 
+    #region PacketFunctions
+
     /// <summary>
-    ///     Sends a welcome message to joining client via TCP.
+    /// Sends a welcome message to joining client via TCP.
     /// </summary>
     /// <param name="_toClient">The client to welcome</param>
     /// <param name="_msg">The message to send to them</param>
@@ -102,7 +104,7 @@ public class ServerSend
 
 
     /// <summary>
-    ///     Spawns the client with all relevant information such as id, username, position, rotation and colour.
+    /// Spawns the client with all relevant information such as id, username, position, rotation and colour.
     /// </summary>
     /// <param name="_toClient">Client to spawn </param>
     /// <param name="_player">If it should spawn a local or external player.</param>
@@ -119,18 +121,26 @@ public class ServerSend
         }
     }
 
+    /// <summary>
+    /// Sends the players position.
+    /// </summary>
+    /// <param name="_player">The players position to send.</param>
     public static void PlayerPosition(Player _player)
     {
         using (var _packet = new Packet((int)ServerPackets.PlayerPosition))
         {
             _packet.Write(_player.id);
-            _packet.Write(NetworkManager.instance.Time);
+            _packet.Write(NetworkManager.instance.Tick);
             _packet.Write(_player.transform.position);
 
             SendUDPDataToAll(_packet);
         }
     }
 
+    /// <summary>
+    ///     Sends the players rotation (to be sent to every client but the one who sent it initially).
+    /// </summary>
+    /// <param name="_player">The players rotation to send from.</param>
     public static void PlayerRotation(Player _player)
     {
         using (var _packet = new Packet((int)ServerPackets.PlayerRotation))
@@ -205,4 +215,6 @@ public class ServerSend
             SendTCPDataToAll(_packet);
         }
     }
+
+    #endregion PacketFunctions
 }

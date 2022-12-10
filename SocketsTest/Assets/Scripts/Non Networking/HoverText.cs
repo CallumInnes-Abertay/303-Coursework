@@ -27,8 +27,8 @@ public class HoverText : MonoBehaviour
 
     private IEnumerator DelayedStart()
     {
-        yield return 1.5f;
-        
+        //
+        yield return new WaitUntil(() => GameObject.FindWithTag("Player") != null);
         //Finds the player to track.
         toTrack = GameObject.FindWithTag("Player");
     }
