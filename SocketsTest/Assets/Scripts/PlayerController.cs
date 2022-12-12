@@ -8,8 +8,8 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
+    
     [NonSerialized] private PlayerManager pManager;
-
    [SerializeField] private float speed;
    [SerializeField] private float jumpHeight;
     private float gravity = -18;

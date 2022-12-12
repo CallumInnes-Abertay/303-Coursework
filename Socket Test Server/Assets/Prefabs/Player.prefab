@@ -49,8 +49,8 @@ MonoBehaviour:
   gravity: -18
   id: 0
   jumpHeight: 10
-  speed: 5
   score: 0
+  speed: 5
   username: 
 --- !u!143 &3593507203594507841
 CharacterController:

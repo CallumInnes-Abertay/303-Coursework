@@ -4,15 +4,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
-using UnityEditor;
 using UnityEngine;
 
 public class Client : MonoBehaviour
 {
-    public static Client instance;
     private const int Port = 50000;
+    public static Client instance;
     private static readonly int dataBufferSize = 4096;
-    private delegate void PacketHandler(Packet _packet);
     private static Dictionary<int, PacketHandler> packetHandler;
     private string ip;
 
@@ -66,7 +64,7 @@ public class Client : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets up the client for connection to the server.
+    /// Sets up the client for connection to the server and the required functions to handle server requests.
     /// </summary>
     private void InitialiseClientData()
     {
@@ -88,7 +86,7 @@ public class Client : MonoBehaviour
             { (int)ServerPackets.ScoreUpdate, ClientHandle.UpdateScore },
             { (int)ServerPackets.StopServer, ClientHandle.StopServer }
         };
-        Debug.Log("Initialised packets.");
+        Debug.Log($"Initialised all {Enum.GetNames(typeof(ServerPackets)).Length} packets.");
     }
 
 
@@ -108,12 +106,13 @@ public class Client : MonoBehaviour
         }
     }
 
+    private delegate void PacketHandler(Packet _packet);
+
     /// <summary>
     ///     Handling TCP connections to server.
     /// </summary>
     public class TCP
     {
-        private int attempt;
         private byte[] receiveBuffer;
         private Packet receivedData;
         public TcpClient socket;
@@ -121,18 +120,27 @@ public class Client : MonoBehaviour
         private NetworkStream stream;
 
         /// <summary>
-        /// Start the process of connecting to the server
+        /// Temporary socket class to store connection state between callback for timeouts.
         /// </summary>
-        public void Connect()
+        private class State
+        {
+            //The socket
+            public TcpClient Client { get; set; }
+            //If timeout has failed or not.
+            public bool Success { get; set; }
+        }
+
+        /// <summary>
+        ///     Start the process of connecting to the server
+        /// </summary>
+        public void Connect(int _timeout = 5000)
         {
             socket = new TcpClient
             {
                 //Sets both the receive and send buffers to size for consistency sake
                 //(this is done on both server/client side to ensure it's read correctly)
                 ReceiveBufferSize = dataBufferSize,
-                SendBufferSize = dataBufferSize,
-                ReceiveTimeout = 3000,
-                SendTimeout = 1000
+                SendBufferSize = dataBufferSize
             };
 
             Debug.Log($"Starting connections with {instance.ip}");
@@ -141,8 +149,22 @@ public class Client : MonoBehaviour
 
             try
             {
+                //when the connection completes before the timeout it will cause a race
+                //we want EndConnect to always treat the connection as successful if it wins
+                var state = new State { Client = socket, Success = true };
+
                 //Starts an async request to connect to the server.
-                socket.BeginConnect(instance.ip, Port, ConnectCallback, socket);
+                var result = socket.BeginConnect(instance.ip, Port, ConnectCallback, state);
+                state.Success = result.AsyncWaitHandle.WaitOne(_timeout, false);
+
+                //If it's timed out or failed to connect 
+                if (!state.Success || !socket.Connected)
+                {
+                    Debug.Log("Socket timed out, closing socket.");
+                    socket.Close();
+                    Disconnect();
+                    UIManager.instance.MenuToggle(false, $"Timed out connecting to {instance.ip}");
+                }
             }
             catch (SocketException e)
             {
@@ -164,38 +186,25 @@ public class Client : MonoBehaviour
         /// <param name="_result">The result of the async operation</param>
         private void ConnectCallback(IAsyncResult _result)
         {
+            var state = (State)_result.AsyncState;
+
+            //If it's already timed out then return early.
+            if (!state.Success )
+            {
+                return;
+            }
+
+            socket = state.Client;
+
             try
             {
-                var success = _result.AsyncWaitHandle.WaitOne(5000, true);
-                Debug.Log("Connecting");
+                Debug.Log("Connecting...");
 
                 //Has successfully connected, so thus stop connecting
-                if (socket.Connected)
-                {
-                    socket.EndConnect(_result);
-                    instance.isConnected = true;
-                    Debug.Log($"Connected successfully to {instance.ip} via TCP.");
-                }
-                //Hasn't connected
-                else
-                {
-                    Debug.Log(
-                        $"Failed to connect to server, is it up? Or do you have the right IP? \nAttempt:{attempt}");
-                    if (attempt < 3)
-                    {
-                        attempt++;
-                        socket.Close();
-                        Connect();
-                    }
-                    else
-                    {
-                        Debug.Log("Failure to connect to server, closing socket.");
 
-                        socket.Close();
-                    }
-
-                    return;
-                }
+                socket.EndConnect(_result);
+                instance.isConnected = true;
+                Debug.Log($"Connected successfully to {instance.ip} via TCP.");
 
                 //Gets the network stream for sending and receiving data.
                 stream = socket.GetStream();
@@ -209,11 +218,25 @@ public class Client : MonoBehaviour
             catch (Exception e)
             {
                 Debug.Log(e);
+                socket.Close();
+                Disconnect();
+                ThreadManager.ExecuteOnMainThread(() => UIManager.instance.MenuToggle(false,
+                    $"Failed to connect to {instance.ip}"));
             }
+
+            //If it has truly connected and not timed out then return.
+            if (socket.Connected && state.Success)
+                return;
+
+            socket.Close();
+            Disconnect();
+            //Has to be ran on the main thread as Unity only allows 
+            ThreadManager.ExecuteOnMainThread(() => UIManager.instance.MenuToggle(false,
+                $"Failed to connect to {instance.ip}"));
         }
 
         /// <summary>
-        /// Sending data to server
+        ///     Sending data to server
         /// </summary>
         /// <param name="packet">The data to send</param>
         public void SendData(Packet packet)
@@ -230,7 +253,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Receives incoming TCP data.
+        ///     Receives incoming TCP data.
         /// </summary>
         /// <param name="_result">The result of the async operation</param>
         private void ReceiveCallback(IAsyncResult _result)
@@ -265,7 +288,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Handles all incoming TCP data.
+        ///     Handles all incoming TCP data.
         /// </summary>
         /// <param name="_data">The data to handle.</param>
         /// <returns>If the packet is to be reset, for reuse.</returns>
@@ -307,7 +330,7 @@ public class Client : MonoBehaviour
 
                         //Call the appropriate function to handle this specific packet.
                         packetHandler[packetId](_packet);
-                        Debug.Log($"Handling TCP request ID:{packetId}");
+                        //Debug.Log($"Handling TCP request ID:{packetId}");
                     }
                 });
 
@@ -325,7 +348,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        ///     Disconnects from the server
+        /// Disconnects client from the server
         /// </summary>
         private void Disconnect()
         {
@@ -336,10 +359,12 @@ public class Client : MonoBehaviour
             receiveBuffer = null;
             socket = null;
         }
+
+      
     }
 
     /// <summary>
-    ///     Handling UDP connection to server.
+    /// Handling UDP connection to server.
     /// </summary>
     public class UDP
     {
@@ -390,7 +415,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Receives incoming UDP data.
+        ///     Receives incoming UDP data.
         /// </summary>
         /// <param name="result">The result of the async operation.</param>
         private void ReceiveCallback(IAsyncResult result)
@@ -448,7 +473,7 @@ public class Client : MonoBehaviour
         }
 
         /// <summary>
-        /// Disconnects the UDP connection.
+        ///     Disconnects the UDP connection.
         /// </summary>
         private void Disconnect()
         {

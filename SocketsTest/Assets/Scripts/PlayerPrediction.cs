@@ -81,7 +81,8 @@ public class  PlayerPrediction : MonoBehaviour
             //If there is a new position set that as the players new position.
             if (newPosition != Vector3.zero)
             {
-                player.SetPosition(newPosition);
+               // player.transform.position = newPosition;
+               player.SetPosition(newPosition);
             }
         }
     }
@@ -93,14 +94,15 @@ public class  PlayerPrediction : MonoBehaviour
     private Vector3 CalculateNewPosition(PlayerManager _player)
     {
 
-        var lastPosition = _player.Positions.LastOrDefault() ?? throw new ArgumentNullException("_player.Positions.Last()");
-        var secondLastPosition = _player.Positions.FirstOrDefault() ?? throw new ArgumentNullException("_player.Positions.First()");
+        var lastPosition = _player.Positions.LastOrDefault();
+        var secondLastPosition = _player.Positions.AsEnumerable().Reverse().Skip(1).FirstOrDefault();
+
 
         if (lastPosition == null) throw new ArgumentNullException(nameof(lastPosition));
         if (secondLastPosition == null) throw new ArgumentNullException(nameof(secondLastPosition));
 
-        Debug.Log($"lastPosition Time: {lastPosition.Tick}\n secondLastPosition Time:{secondLastPosition.Tick}");
-        Debug.Log($"lastPosition Position: {lastPosition.Position}\n secondLastPosition:{secondLastPosition.Position}");
+        //Debug.Log($"lastPosition Position: {lastPosition.Position}\n secondLastPosition:{secondLastPosition.Position}");
+        //Debug.Log($"lastPosition Time: {lastPosition.Tick}\n secondLastPosition Time:{secondLastPosition.Tick}");
 
 
         if (lastPosition.Tick == 0 || secondLastPosition.Tick == 0)
@@ -126,7 +128,7 @@ public class  PlayerPrediction : MonoBehaviour
 
         var newPos = gameObject.transform.position + displacement;
 
-        Debug.Log($"Speed: {speed}\n newPos:{newPos}");
+        Debug.Log($"Speed: {speed}\n old pos: {transform.position}newPos:{newPos}");
         return newPos;
 
 

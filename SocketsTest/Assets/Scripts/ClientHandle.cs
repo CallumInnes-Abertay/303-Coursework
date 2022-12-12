@@ -2,7 +2,6 @@ using System.Linq;
 using System.Net;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class ClientHandle : MonoBehaviour
 {
@@ -79,8 +78,8 @@ public class ClientHandle : MonoBehaviour
             else
             {
                 _player.transform.position = newPosition;
+                //_player.SetPosition(newPosition);
                 _player.Positions.Add(new PreviousPositions(tick, newPosition));
-                Debug.Log("Dealing with external player");
                 if (_player.Positions.Count >= 10) _player.Positions.RemoveAt(0);
             }
         }

@@ -51,8 +51,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 5
   jumpHeight: 10
-  correctionThreshold: 0.1
-  controller: {fileID: 5674640483803137481}
 --- !u!114 &8449941147299482180
 MonoBehaviour:
   m_ObjectHideFlags: 0

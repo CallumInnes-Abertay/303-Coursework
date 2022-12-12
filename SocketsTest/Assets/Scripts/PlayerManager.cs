@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -10,14 +11,13 @@ public class PlayerManager : MonoBehaviour
     public string Username { get; set; }
     public int Score { get; set; }
     [ItemCanBeNull]
-    public List<PreviousPositions> Positions { get; set; } = new();
+    public List<PreviousPositions> Positions { get; } = new();
     [SerializeField] [Range(0.1f, 5)] private float correctionThreshold = 1;
 
 
 
     private void Start()
     {
-        Positions.Capacity = 2;
         fromPos = transform.position;
         toPos = transform.position;
     }
@@ -45,7 +45,7 @@ public class PlayerManager : MonoBehaviour
 
         if (currentTime == null)
             return false;
-        Debug.Log($"Server time: {_tick} Client time: {currentTime.Tick}");
+        Debug.Log($"Correcting position at Server time: {_tick} Client time: {currentTime.Tick}");
 
         //Checks the clients predicted path to the servers actual position for tha 
         var distance =
@@ -67,8 +67,13 @@ public class PlayerManager : MonoBehaviour
     }
 
     private void Update()
-    { 
-        //transform.position = Vector3.Lerp(fromPos, toPos, (Time.time - lastTime) / (1.0f / 30));
+    {
+        if (Id != Client.instance.myId)
+        {
+            transform.position = Vector3.Lerp(fromPos, toPos, (Time.time - lastTime) / (1.0f / 30));
+        }
     }
+
+
 
 }

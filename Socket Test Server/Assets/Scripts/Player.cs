@@ -47,7 +47,10 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+
+
         var inputDirection = Vector2.zero;
+        //Bool array of every possible movement input.
         if (inputs[0]) inputDirection.y += 1;
         if (inputs[1]) inputDirection.y -= 1;
         if (inputs[2]) inputDirection.x -= 1;

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -10,9 +11,9 @@ public class UIManager : MonoBehaviour
 
     //Menu variables
     [Header("Menu")] public TMP_InputField ipAddressField;
-    [SerializeField] private GameObject startMenuPanel;
+    [SerializeField] private GameObject connectPanel;
     [SerializeField] private Button connectButton;
-    [SerializeField] public TMP_Text errorText;
+    [SerializeField] private TMP_Text errorText;
     public TMP_InputField usernameField;
 
     //UI variables
@@ -117,38 +118,40 @@ public class UIManager : MonoBehaviour
         connectButton.interactable = false;
         usernameField.interactable = false;
         ipAddressField.interactable = false;
-        connectButton.gameObject.SetActive(false);
-        usernameField.gameObject.SetActive(false);
-        ipAddressField.gameObject.SetActive(false);
+        connectPanel.SetActive(false);
 
         errorText.gameObject.SetActive(true);
         errorText.color = Color.black;
-        errorText.text = $"Connecting to {ipAddressField.text}";
+        errorText.text = $"Connecting to {ipAddressField.text}...";
     }
 
-    //Toggles the menu
-    public void MenuToggle(bool isHidden = true)
+    /// <summary>
+    /// Toggles the menu
+    /// </summary>
+    /// <param name="_isMenuHidden">Should the main menu be shown or not</param>
+    /// <param name="_errorMessage">Optional, error message shown</param>
+    public void MenuToggle(bool _isMenuHidden = true, string _errorMessage = "")
     {
         //If menu is hidden then display HUD
-        if (isHidden)
+        if (_isMenuHidden)
         {
             errorText.gameObject.SetActive(false);
-            startMenuPanel.SetActive(false);
+            connectPanel.SetActive(false);
             hudPanel.SetActive(true);
         }
         //Show menu.
         else
         {
             errorText.gameObject.SetActive(true);
-            startMenuPanel.SetActive(true);
+            errorText.text = _errorMessage;
+            ipAddressField.text = "";
+            connectPanel.SetActive(true);
             hudPanel.SetActive(false);
 
             connectButton.interactable = true;
             usernameField.interactable = true;
             ipAddressField.interactable = true;
-            connectButton.gameObject.SetActive(true);
             usernameField.gameObject.SetActive(true);
-            ipAddressField.gameObject.SetActive(true);
         }
         
     }

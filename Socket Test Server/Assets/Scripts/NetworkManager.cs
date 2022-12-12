@@ -116,7 +116,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Stop the serverside timer and resets it.
+    /// Stop the server side timer and resets it.
     /// </summary>
     public void StopTimer()
     {
