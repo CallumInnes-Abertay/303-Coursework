@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public class ServerHandle
 {
@@ -61,14 +63,21 @@ public class ServerHandle
     /// <param name="_packet">The new position/rotation of the client.</param>
     public static void PlayerMovement(int _fromClient, Packet _packet)
     {
-        //Reads all the keys pressed by the client
-        var inputs = new bool[_packet.ReadInt()];
-        for (var i = 0; i < inputs.Length; i++) inputs[i] = _packet.ReadBool();
-        //And gets their rotation
-        var rotation = _packet.ReadQuaternion();
+        try
+        {
+            //Reads all the keys pressed by the client
+            var inputs = new bool[_packet.ReadInt()];
+            for (var i = 0; i < inputs.Length; i++) inputs[i] = _packet.ReadBool();
+            //And gets their rotation
+            var rotation = _packet.ReadQuaternion();
 
-        //Update the players 
-        Server.clients[_fromClient].player.SetInput(inputs, rotation);
+            //Update the players 
+            Server.clients[_fromClient].player.SetInput(inputs, rotation);
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+        }
     }
 
     /// <summary>
