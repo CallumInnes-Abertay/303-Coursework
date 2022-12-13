@@ -15,6 +15,7 @@ public enum ServerPackets
     PlayerDisconnected,
     SpawnCollectable,
     ScoreUpdate,
+    Victory,
     StopServer
 }
 

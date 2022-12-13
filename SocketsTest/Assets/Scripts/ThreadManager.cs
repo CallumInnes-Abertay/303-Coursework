@@ -52,5 +52,4 @@ public class ThreadManager : MonoBehaviour
         foreach (var functionToRun in executeCopiedOnMainThread)
             functionToRun();
     }
-
 }

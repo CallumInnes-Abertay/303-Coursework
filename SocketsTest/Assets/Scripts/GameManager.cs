@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +11,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject collectablePrefab;
     [SerializeField] private GameObject externalPlayerPrefab;
     [SerializeField] private GameObject localPlayerPrefab;
+
+    [SerializeField] private List<GameObject> toDelete;
+
 
     [field: NonSerialized] public int Tick { get; private set; }
     private bool isTimerRunning;
@@ -28,10 +30,12 @@ public class GameManager : MonoBehaviour
             Debug.Log("Instance already exists, destroying object!");
             Destroy(this);
         }
+        
     }
 
     private void Start()
     {
+        toDelete = new List<GameObject>();
         //So the timer doesnt stop if you alt tab and desync the player and client.
         Application.runInBackground = true;
     }
@@ -45,7 +49,7 @@ public class GameManager : MonoBehaviour
         //Increment tick
         Tick++;
 
-        UIManager.instance.timerText.text = Tick.ToString();
+        UIManager.instance.timerText.text = $"Client Tick: {Tick}";
 
     }
 
@@ -75,6 +79,7 @@ public class GameManager : MonoBehaviour
             meshRenderer.material.color = colorHsv;
         }
 
+        toDelete.Add(_player);
         //Caches player manager.
         var playerManager = _player.GetComponent<PlayerManager>();
 
@@ -96,6 +101,25 @@ public class GameManager : MonoBehaviour
     public void SpawnCollectable(Vector3 _collectablePos)
     {
         Instantiate(collectablePrefab, _collectablePos, Quaternion.identity);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void EndGame()
+    {
+        Client.instance.Disconnect();
+        foreach (var objectToDelete in toDelete)
+        {
+            Destroy(objectToDelete);
+        }
+
+        var previousCollectables = GameObject.FindGameObjectsWithTag("Collectable");
+        foreach (var collectable in previousCollectables) Destroy(collectable);
+        players.Clear();
+        Cursor.lockState = CursorLockMode.None;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
     }
 
     /// <summary>

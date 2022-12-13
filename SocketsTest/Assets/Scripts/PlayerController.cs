@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -15,6 +13,8 @@ public class PlayerController : MonoBehaviour
     private float gravity = -18;
     private CharacterController controller;
     private float yVelocity;
+    [SerializeField][Range(0.1f, 5)] private float correctionThreshold = 1;
+
     private void Start()
     {
         //Reduce movement variables to account for tick rate.
@@ -93,6 +93,39 @@ public class PlayerController : MonoBehaviour
             GameManager.instance.Tick,
             transform.position
             ));
+    }
+
+    ///     Snaps the player back to the correct position if the clients prediction is too far off.
+    /// </summary>
+    /// <param name="_position">The position to check</param>
+    /// <param name="_tick">The tick this value relates to</param>
+    /// <returns>If they could sync the client to the server or not.</returns>
+    public bool ServerCorrection(Vector3 _position, int _tick)
+    {
+        var currentTime = pManager.Positions.Where(x => x.Tick == _tick).FirstOrDefault();
+
+        if (currentTime == null)
+            return false;
+        Debug.Log($"Correcting position at Server time: {_tick} Client time: {currentTime.Tick}");
+
+        //Check if the clients predicted position is higher than a set threshold.
+        var distance =
+            Vector3.Distance(new Vector3(currentTime.Position.x, currentTime.Position.y, currentTime.Position.z),
+                _position);
+
+        //If in the case that it is, then snap the player back.
+        if (distance > correctionThreshold)
+        {
+            //And in the case that it has strayed too far off.
+            Debug.Log($"Threshold exceeded by {distance}, fixing time");
+            //Snap the player back
+            transform.position = _position;
+        }
+
+        //If it's not then we can accept the clients predicted movement was good enough
+        //Either way we remove all positions past the incoming server tick to free up memory.
+        pManager.Positions.RemoveAll(x => x.Tick <= _tick);
+        return true;
     }
 
     //If collision with a collectable.

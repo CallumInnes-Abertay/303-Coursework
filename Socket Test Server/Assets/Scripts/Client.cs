@@ -16,7 +16,7 @@ public class Client
 
     public Client(int _clientId)
     {
-        //Give them a id to tie them to their clientside counterpart
+        //Give them a id to tie them to their client side counterpart
         id = _clientId;
         //TCP and UDP for sending and listening.
         tcp = new TCP(id);
@@ -46,7 +46,7 @@ public class Client
     }
 
     /// <summary>
-    /// If the client is no longer sending data and thus disconnected.
+    ///     If the client is no longer sending data and thus disconnected.
     /// </summary>
     private void Disconnect()
     {
@@ -79,7 +79,7 @@ public class Client
 
 
     /// <summary>
-    /// Handling TCP server side.
+    ///     Handling TCP server side.
     /// </summary>
     public class TCP
     {
@@ -119,7 +119,7 @@ public class Client
         }
 
         /// <summary>
-        /// Sends data to the client via TCP.
+        ///     Sends data to the client via TCP.
         /// </summary>
         /// <param name="_packet">The data to be sent.</param>
         public void SendData(Packet _packet)
@@ -136,7 +136,7 @@ public class Client
         }
 
         /// <summary>
-        /// Reads all incoming data coming from the client
+        ///     Reads all incoming data coming from the client
         /// </summary>
         /// <param name="_result">The status of the async operation..</param>
         private void ReceiveCallback(IAsyncResult _result)
@@ -171,13 +171,12 @@ public class Client
         }
 
         /// <summary>
-        /// Handles all incoming data. 
+        ///     Handles all incoming data.
         /// </summary>
         /// <param name="_data">The data to handle in the form of a byte array.</param>
         /// <returns></returns>
         private bool HandleData(byte[] _data)
         {
-            
             var packetLength = 0;
 
             //prepares the byte array to be read.
@@ -239,7 +238,7 @@ public class Client
         }
 
         /// <summary>
-        /// Closes the TCP connection.
+        ///     Closes the TCP connection.
         /// </summary>
         public void Disconnect()
         {
@@ -254,11 +253,11 @@ public class Client
     }
 
     /// <summary>
-    /// Handling UDP server side.
+    ///     Handling UDP server side.
     /// </summary>
     public class UDP
     {
-        private int id;
+        private readonly int id;
         public IPEndPoint endPoint;
 
         public UDP(int _id)
@@ -267,7 +266,7 @@ public class Client
         }
 
         /// <summary>
-        /// Initialise method for the connected clients UDP datagrams.
+        ///     Initialise method for the connected clients UDP datagrams.
         /// </summary>
         /// <param name="_endPoint">The IP address of the connected client.</param>
         public void Connect(IPEndPoint _endPoint)
@@ -276,7 +275,7 @@ public class Client
         }
 
         /// <summary>
-        /// Sends data to a client using UDP.
+        ///     Sends data to a client using UDP.
         /// </summary>
         /// <param name="_packet">The data to send.</param>
         public void SendData(Packet _packet)
@@ -285,7 +284,7 @@ public class Client
         }
 
         /// <summary>
-        /// Handles all incoming data from client and runs the handle method.
+        ///     Handles all incoming data from client and runs the handle method.
         /// </summary>
         /// <param name="_packetData">Data to handle.</param>
         public void HandleData(Packet _packetData)
@@ -315,7 +314,7 @@ public class Client
         }
 
         /// <summary>
-        /// Closes the UDP connection.
+        ///     Closes the UDP connection.
         /// </summary>
         public void Disconnect()
         {

@@ -47,8 +47,6 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-
-
         var inputDirection = Vector2.zero;
         //Bool array of every possible movement input.
         if (inputs[0]) inputDirection.y += 1;
@@ -125,7 +123,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Destroy this player, this is here so client doesn't have to inherit from monobehaviour unnecessarily.
+    ///     Destroy this player, this is here so client doesn't have to inherit from monobehaviour unnecessarily.
     /// </summary>
     public void DestroyPlayer()
     {

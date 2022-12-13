@@ -126,6 +126,7 @@ public class Server
         catch (Exception e)
         {
             Debug.Log($"Error receiving UDP data: {e}");
+            udpListener.BeginReceive(UDPReceiveCallback, null);
         }
     }
 

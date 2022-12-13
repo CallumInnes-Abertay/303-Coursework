@@ -43,7 +43,7 @@ public class NetworkManager : MonoBehaviour
         if (!isTimerRunning)
             return;
 
-        Tick ++;
+        Tick++;
     }
 
 
@@ -54,7 +54,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawns player and generates random coordinates to spawn them at.
+    ///     Spawns player and generates random coordinates to spawn them at.
     /// </summary>
     /// <returns>A new player.</returns>
     public Player InstantiatePlayer(string _username)
@@ -69,7 +69,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Pings the client to adjust their ping by a set amount.
+    ///     Pings the client to adjust their ping by a set amount.
     /// </summary>
     /// <param name="_ip">The IP address to ping.</param>
     /// <returns>The ping to the client (Note not the roundtrip time)</returns>
@@ -107,7 +107,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Starts the server side timer.
+    ///     Starts the server side timer.
     /// </summary>
     public void StartTimer()
     {
@@ -116,7 +116,7 @@ public class NetworkManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Stop the server side timer and resets it.
+    ///     Stop the server side timer and resets it.
     /// </summary>
     public void StopTimer()
     {

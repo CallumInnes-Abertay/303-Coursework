@@ -1,12 +1,11 @@
 using System.Linq;
 using System.Net;
-using UnityEditor;
 using UnityEngine;
 
 public class ClientHandle : MonoBehaviour
 {
     /// <summary>
-    /// Confirms the server has us in the server.
+    ///     Confirms the server has us in the server.
     /// </summary>
     /// <param name="_packet">Confirmation message from the server.</param>
     public static void Welcome(Packet _packet)
@@ -24,7 +23,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// //Starts the client side timer synced up with the server (adjusted for ping).
+    ///     //Starts the client side timer synced up with the server (adjusted for ping).
     /// </summary>
     /// <param name="_packet"></param>
     public static void StartTimer(Packet _packet)
@@ -35,7 +34,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawns the player into the game.
+    ///     Spawns the player into the game.
     /// </summary>
     /// <param name="_packet">The id, username, position,rotation and colour of the player.</param>
     public static void SpawnPlayer(Packet _packet)
@@ -52,7 +51,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// The players position calculated by the inputs and the tick it was calculated at.
+    ///     The players position calculated by the inputs and the tick it was calculated at.
     /// </summary>
     /// <param name="_packet"></param>
     public static void PlayerPosition(Packet _packet)
@@ -64,21 +63,25 @@ public class ClientHandle : MonoBehaviour
         //Lets us see by how much the server or client are trailing by.
         UIManager.instance.serverPosText.text = $"Server Tick: {tick} has position at {newPosition}";
 
+        //Attempts to get player manager by reference
         if (GameManager.players.TryGetValue(id, out var _player))
         {
             //If local player.
             if (id.Equals(Client.instance.myId))
             {
-                if (!_player.ServerCorrection(newPosition, tick))
+                //Gets playercontroller to do input prediction
+                var playerController = _player.gameObject.GetComponent<PlayerController>();
+                if (!playerController.ServerCorrection(newPosition, tick))
                 {
-                    //Debug.Log("Correction failed");
+
                 }
             }
-            //If external player.
+            //If external player then we dont need input prediction.
             else
             {
                 _player.transform.position = newPosition;
                 //_player.SetPosition(newPosition);
+                //Add to list of all positions for linear prediction/dead reckoning.
                 _player.Positions.Add(new PreviousPositions(tick, newPosition));
                 if (_player.Positions.Count >= 10) _player.Positions.RemoveAt(0);
             }
@@ -86,19 +89,19 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// Updates the external players rotation.
+    ///     Updates the external players rotation.
     /// </summary>
     /// <param name="_packet">The rotation to read</param>
     public static void PlayerRotation(Packet _packet)
     {
         var id = _packet.ReadInt();
         var rotation = _packet.ReadQuaternion();
-
+        //Gets the player manager by reference and changes its rotation by the incoming server rotation.
         if (GameManager.players.TryGetValue(id, out var _player)) _player.transform.rotation = rotation;
     }
 
     /// <summary>
-    /// Gets other players colours.
+    ///     Gets other players colours.
     /// </summary>
     /// <param name="_packet">Colour to read</param>
     public static void PlayerColour(Packet _packet)
@@ -117,7 +120,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// If player has disconnected, then disconnect them from all clients as well.
+    ///     If player has disconnected, then disconnect them from all clients as well.
     /// </summary>
     /// <param name="_packet">Id of player to disconnect.</param>
     public static void PlayerDisconnected(Packet _packet)
@@ -129,7 +132,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// If server has requested for clients to spawn a coin somewhere.
+    ///     If server has requested for clients to spawn a coin somewhere.
     /// </summary>
     /// <param name="_packet">Position to spawn collectable</param>
     public static void SpawnCollectable(Packet _packet)
@@ -144,7 +147,7 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// If server has requested for clients to spawn a coin somewhere.
+    ///     If server has requested for clients to spawn a coin somewhere.
     /// </summary>
     /// <param name="_packet">Position to spawn collectable</param>
     public static void UpdateScore(Packet _packet)
@@ -156,7 +159,7 @@ public class ClientHandle : MonoBehaviour
         foreach (var player in GameManager.players.Values.Where(player => player.Id.Equals(id)))
         {
             player.Score = score;
-            //Local player does not have "hovertext" so can continue early.
+            //Local player does not have "hover text" so can continue early.
             if (player.gameObject.CompareTag("Player")) continue;
 
             //Updates the score to the UI above player
@@ -165,7 +168,21 @@ public class ClientHandle : MonoBehaviour
     }
 
     /// <summary>
-    /// Stops the game (as server has shut down).
+    ///     If a client has collected 10 coins or more.
+    /// </summary>
+    /// <param name="_packet">id of who collected enough coins for a victory</param>
+    public static void Victory(Packet _packet)
+    {
+        var id = _packet.ReadInt();
+        StaticVariables.restartMessage =
+            $"{GameManager.players[id].Username} has collected {GameManager.players[id].Score} and has won.";
+
+        GameManager.instance.EndGame();
+        UIManager.instance.MenuToggle(false);
+    }
+
+    /// <summary>
+    ///     Stops the game (as server has shut down).
     /// </summary>
     /// <param name="_packet">Message to read out to clients before closing.</param>
     public static void StopServer(Packet _packet)
@@ -173,14 +190,7 @@ public class ClientHandle : MonoBehaviour
         var msg = _packet.ReadString();
 
         Debug.Log(msg);
-
-#if UNITY_EDITOR
-        GameManager.instance.StopTimer();
-        //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        EditorApplication.isPlaying = false;
-#endif
-        GameManager.instance.StopTimer();
-        //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        Application.Quit();
+        StaticVariables.restartMessage = msg;
+        GameManager.instance.EndGame();
     }
 }

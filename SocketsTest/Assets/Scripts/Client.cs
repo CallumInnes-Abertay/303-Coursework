@@ -14,7 +14,7 @@ public class Client : MonoBehaviour
     private static Dictionary<int, PacketHandler> packetHandler;
     private string ip;
 
-    private bool isConnected;
+    public bool isConnected;
     [NonSerialized] public int myId = 0;
     public TCP tcp;
     public UDP udp;
@@ -84,6 +84,7 @@ public class Client : MonoBehaviour
             { (int)ServerPackets.PlayerDisconnected, ClientHandle.PlayerDisconnected },
             { (int)ServerPackets.SpawnCollectable, ClientHandle.SpawnCollectable },
             { (int)ServerPackets.ScoreUpdate, ClientHandle.UpdateScore },
+            { (int)ServerPackets.Victory, ClientHandle.Victory },
             { (int)ServerPackets.StopServer, ClientHandle.StopServer }
         };
         Debug.Log($"Initialised all {Enum.GetNames(typeof(ServerPackets)).Length} packets.");
@@ -93,7 +94,7 @@ public class Client : MonoBehaviour
     /// <summary>
     /// For disconnecting client from server.
     /// </summary>
-    private void Disconnect()
+    public void Disconnect()
     {
         if (isConnected)
         {
@@ -101,7 +102,6 @@ public class Client : MonoBehaviour
             udp.socket.Close();
 
             isConnected = false;
-
             Debug.Log("Disconnected from server.");
         }
     }

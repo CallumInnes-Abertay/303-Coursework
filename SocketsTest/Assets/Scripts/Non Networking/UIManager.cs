@@ -1,33 +1,31 @@
 using System.Collections;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager instance;
+    private Regex ipRegex;
 
     //Menu variables
-    [Header("Menu")] public TMP_InputField ipAddressField;
+    [Header("Menu")] 
     [SerializeField] private GameObject connectPanel;
+    public TMP_InputField ipAddressField;
+    public TMP_InputField usernameField;
     [SerializeField] private Button connectButton;
     [SerializeField] private TMP_Text errorText;
-    public TMP_InputField usernameField;
-
     //UI variables
-    [Header("UI")] 
-    [SerializeField] private GameObject hudPanel;
-    public TMP_Text scoreText;
-    public TMP_Text timerText;
-    public TMP_Text serverPosText;
+    [Header("UI")] [SerializeField] 
+    private GameObject hudPanel;
     public TMP_Text isPredictingText;
+    public TMP_Text scoreText;
+    public TMP_Text serverPosText;
+    public TMP_Text timerText;
 
 
-
-
-    private Regex ipRegex;
 
 
     private void Awake()
@@ -50,25 +48,17 @@ public class UIManager : MonoBehaviour
         ipRegex = new Regex(@"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$",
             RegexOptions.Compiled
             | RegexOptions.IgnoreCase);
-    }
 
-    /// <summary>
-    /// Displays Error message to user using a text field.
-    /// </summary>
-    /// <param name="errorMessage">The error message to display.</param>
-    /// <returns>The same object until a set time has passed. </returns>
-    private IEnumerator DisplayError(string errorMessage)
-    {
-        errorText.gameObject.SetActive(true);
-        errorText.text = errorMessage;
-        yield return new WaitForSeconds(3);
-        errorText.gameObject.SetActive(false);
-        errorText.text = "";
+        if (!string.IsNullOrEmpty(StaticVariables.restartMessage))
+        {
+            errorText.gameObject.SetActive(true);
+            errorText.text = StaticVariables.restartMessage;
+        }
     }
 
 
     /// <summary>
-    /// Ran when connect to server button is pressed.
+    ///     Ran when connect to server button is pressed.
     /// </summary>
     public void ConnectToServer()
     {
@@ -96,7 +86,7 @@ public class UIManager : MonoBehaviour
                 return;
             }
 
-            
+
             //Start the process of connecting to the server.
             ConnectingText();
             Client.instance.ConnectToServer();
@@ -106,6 +96,23 @@ public class UIManager : MonoBehaviour
         {
             StartCoroutine(DisplayError("Please enter a valid IP address"));
         }
+    }
+
+    public void ReturntoMainMenu()
+    {
+        if (Client.instance.isConnected) GameManager.instance.EndGame();
+    }
+
+    public void Exit()
+    {
+        if (Client.instance.isConnected) Client.instance.Disconnect();
+#if UNITY_EDITOR
+        // Application.Quit() does not work in the editor so
+        // UnityEditor.EditorApplication.isPlaying need to be set to false to end the game
+        EditorApplication.isPlaying = false;
+#else
+         Application.Quit();
+#endif
     }
 
     /// <summary>
@@ -125,8 +132,9 @@ public class UIManager : MonoBehaviour
         errorText.text = $"Connecting to {ipAddressField.text}...";
     }
 
+
     /// <summary>
-    /// Toggles the menu
+    ///     Toggles the menu
     /// </summary>
     /// <param name="_isMenuHidden">Should the main menu be shown or not</param>
     /// <param name="_errorMessage">Optional, error message shown</param>
@@ -153,8 +161,19 @@ public class UIManager : MonoBehaviour
             ipAddressField.interactable = true;
             usernameField.gameObject.SetActive(true);
         }
-        
     }
 
-
+    /// <summary>
+    ///     Displays Error message to user using a text field.
+    /// </summary>
+    /// <param name="errorMessage">The error message to display.</param>
+    /// <returns>The same object until a set time has passed. </returns>
+    public IEnumerator DisplayError(string errorMessage)
+    {
+        errorText.gameObject.SetActive(true);
+        errorText.text = errorMessage;
+        yield return new WaitForSeconds(3);
+        errorText.gameObject.SetActive(false);
+        errorText.text = "";
+    }
 }

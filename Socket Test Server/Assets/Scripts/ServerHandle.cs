@@ -1,11 +1,10 @@
-using System;
 using System.Linq;
 using UnityEngine;
 
 public class ServerHandle
 {
     /// <summary>
-    /// The welcome has been received from the client.
+    ///     The welcome has been received from the client.
     /// </summary>
     /// <param name="_fromClient">The client it came from</param>
     /// <param name="_packet">The packet they sent (including their id and username)</param>
@@ -29,14 +28,10 @@ public class ServerHandle
 
         //If this is the first player in
         if (Server.players.Count < 2)
-        {
             CollectableManager.instance.SpawnCollectable();
-        }
         //If it's not then don't spawn a new one, just send the previous ones position to where they are.
         else
-        {
             CollectableManager.instance.SpawnCollectable(false);
-        }
 
         var ping = NetworkManager.PingClient(ip.ToString());
 
@@ -55,10 +50,7 @@ public class ServerHandle
         }
 
         //Start the timer only on the first client joining.
-        if (Server.players.Count < 2)
-        {
-            NetworkManager.instance.StartTimer();
-        }
+        if (Server.players.Count < 2) NetworkManager.instance.StartTimer();
     }
 
 
@@ -70,20 +62,17 @@ public class ServerHandle
     public static void PlayerMovement(int _fromClient, Packet _packet)
     {
         //Reads all the keys pressed by the client
-        bool[] inputs = new bool[_packet.ReadInt()];
-        for (int i = 0; i < inputs.Length; i++)
-        {
-            inputs[i] = _packet.ReadBool();
-        }
+        var inputs = new bool[_packet.ReadInt()];
+        for (var i = 0; i < inputs.Length; i++) inputs[i] = _packet.ReadBool();
         //And gets their rotation
-        Quaternion rotation = _packet.ReadQuaternion();
+        var rotation = _packet.ReadQuaternion();
 
         //Update the players 
         Server.clients[_fromClient].player.SetInput(inputs, rotation);
     }
 
     /// <summary>
-    /// That a client collected a collectable
+    ///     That a client collected a collectable
     /// </summary>
     /// <param name="_fromClient">ID of client who collected the collectable.</param>
     /// <param name="_packet"></param>
@@ -97,14 +86,23 @@ public class ServerHandle
                      player.id.Equals(id)))
         {
             player.score++;
-            
+
             //Tell every other client they've picked a collectable up.
             ServerSend.ScoreUpdate(player);
         }
 
         //Debug the players score.
         foreach (var player in Server.players)
+        {
             Debug.Log($"{player.Value.username} has {player.Value.score} score");
+            if (player.Value.score >= 10)
+            {
+                ServerSend.Victory(player.Value); 
+                 return;
+            }
+
+            
+        }
 
 
         //Spawns a new collectable for all clients to pick up (starting a cycle)
