@@ -56,6 +56,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    
 
     /// <summary>
     ///     Ran when connect to server button is pressed.
