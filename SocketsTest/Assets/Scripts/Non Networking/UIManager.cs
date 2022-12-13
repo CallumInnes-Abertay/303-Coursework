@@ -54,9 +54,12 @@ public class UIManager : MonoBehaviour
             errorText.gameObject.SetActive(true);
             errorText.text = StaticVariables.restartMessage;
         }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
-    
+
 
     /// <summary>
     ///     Ran when connect to server button is pressed.
